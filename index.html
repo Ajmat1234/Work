@@ -38,13 +38,10 @@
     const chatContainer = document.getElementById("chatContainer");
     const input = document.getElementById("userInput");
 
-    // Backend को पेज लोड होते ही जगा दो
+    // Backend को जैसे ही frontend खुले, वैसे ही जगा दो
     window.addEventListener("load", () => {
-      fetch("https://work-4ec6.onrender.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "wake up" })
-      }).then(() => console.log("Backend woken up!"))
+      fetch("https://work-4ec6.onrender.com/ping")
+        .then(() => console.log("Backend woken up!"))
         .catch(err => console.log("Wake up failed:", err));
     });
 
@@ -65,7 +62,7 @@
 
       appendMessage(userMsg, true);
       input.value = "";
-      const loading = appendMessage("कृपया प्रतीक्षा करें...", false);
+      appendMessage("कृपया प्रतीक्षा करें...", false);
 
       try {
         const res = await fetch("https://work-4ec6.onrender.com/chat", {
