@@ -1,4 +1,3 @@
-<!-- Full HTML Code (Updated API endpoint) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,6 +37,16 @@
   <script>
     const chatContainer = document.getElementById("chatContainer");
     const input = document.getElementById("userInput");
+
+    // Backend को पेज लोड होते ही जगा दो
+    window.addEventListener("load", () => {
+      fetch("https://work-4ec6.onrender.com/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "wake up" })
+      }).then(() => console.log("Backend woken up!"))
+        .catch(err => console.log("Wake up failed:", err));
+    });
 
     function appendMessage(text, isUser = false) {
       const wrapper = document.createElement("div");
