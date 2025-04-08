@@ -1,3 +1,4 @@
+<!-- Full HTML Code -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +20,9 @@
   <div class="fixed top-0 left-0 right-0 bg-gray-800 p-2 z-20">
     <h1 class="text-lg font-bold">JARVIS Typing Fixer</h1>
   </div>
+
   <div class="flex-1 p-4 overflow-y-auto mt-12" id="chatContainer"></div>
+
   <div class="p-4 bg-gray-800 sticky bottom-0">
     <div class="flex items-center">
       <textarea id="userInput"
@@ -31,6 +34,7 @@
       </button>
     </div>
   </div>
+
   <script>
     const chatContainer = document.getElementById("chatContainer");
     const input = document.getElementById("userInput");
@@ -39,7 +43,7 @@
       const wrapper = document.createElement("div");
       wrapper.className = `my-2 flex ${isUser ? 'justify-end' : 'justify-start'}`;
       const msg = document.createElement("div");
-      msg.className = `p-3 rounded-lg bg-${isUser ? 'blue' : 'gray'}-700 text-white max-w-[80%] break-words`;
+      msg.className = `p-3 rounded-lg bg-${isUser ? 'blue' : 'gray'}-700 text-white max-w-[80%] break-words whitespace-pre-wrap`;
       msg.textContent = text;
       wrapper.appendChild(msg);
       chatContainer.appendChild(wrapper);
@@ -52,18 +56,24 @@
 
       appendMessage(userMsg, true);
       input.value = "";
+      appendMessage("कृपया प्रतीक्षा करें...", false);
 
       try {
-        const res = await fetch("https://work-4ec6.onrender.com/chat", {
+        const res = await fetch("https://your-backend.onrender.com/chat", { // <<< CHANGE THIS TO YOUR BACKEND
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: userMsg })
         });
 
         const data = await res.json();
-        appendMessage(data.reply || "कोई जवाब नहीं।", false);
+
+        // Remove "कृपया प्रतीक्षा करें..." line
+        const loadingMsg = [...chatContainer.children].find(div => div.textContent.includes("कृपया प्रतीक्षा करें"));
+        if (loadingMsg) loadingMsg.remove();
+
+        appendMessage(data.reply || "कोई जवाब नहीं मिला।", false);
       } catch (err) {
-        appendMessage("Error: Unable to connect.", false);
+        appendMessage("त्रुटि: सर्वर से जुड़ नहीं सके।", false);
       }
     }
   </script>
