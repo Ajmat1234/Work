@@ -1,4 +1,4 @@
-<!-- Full HTML Code -->
+<!-- Full HTML Code (Updated API endpoint) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,10 +56,10 @@
 
       appendMessage(userMsg, true);
       input.value = "";
-      appendMessage("कृपया प्रतीक्षा करें...", false);
+      const loading = appendMessage("कृपया प्रतीक्षा करें...", false);
 
       try {
-        const res = await fetch("https://your-backend.onrender.com/chat", { // <<< CHANGE THIS TO YOUR BACKEND
+        const res = await fetch("https://work-4ec6.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: userMsg })
@@ -67,9 +67,10 @@
 
         const data = await res.json();
 
-        // Remove "कृपया प्रतीक्षा करें..." line
-        const loadingMsg = [...chatContainer.children].find(div => div.textContent.includes("कृपया प्रतीक्षा करें"));
-        if (loadingMsg) loadingMsg.remove();
+        // Remove "कृपया प्रतीक्षा करें..." message
+        const msgs = [...chatContainer.children];
+        const waitMsg = msgs.find(div => div.textContent.includes("कृपया प्रतीक्षा करें"));
+        if (waitMsg) waitMsg.remove();
 
         appendMessage(data.reply || "कोई जवाब नहीं मिला।", false);
       } catch (err) {
