@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI GF - Pari</title>
+</head>
+<body>
+  <h2>AI GF Pari se Baat Karo</h2>
+  <button id="start">Start Talking</button>
+  <p id="status">Status: Disconnected</p>
+  <p id="ai-response"></p>  <script>
+    const startBtn = document.getElementById("start");
+    const statusText = document.getElementById("status");
+    const aiText = document.getElementById("ai-response");
+
+    const ws = new WebSocket("wss://your-backend-url.onrender.com/ws");
+    let recognition;
+
+    ws.onopen = () => {
+      statusText.textContent = "Status: Connected to Pari...";
+    };
+
+    ws.onmessage = (event) => {
+      const msg = event.data;
+      aiText.textContent = "Pari: " + msg;
+      speakText(msg);
+    };
+
+    function speakText(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.voice = synth.getVoices().find(voice => voice.name.includes("Female") || voice.name.includes("Google")); // Customize voice
+      utter.pitch = 1.2;
+      utter.rate = 1;
+      synth.speak(utter);
+    }
+
+    startBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech Recognition not supported');
+        return;
+      }
+
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = 'hi-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+      statusText.textContent = "Listening...";
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        statusText.textContent = "You: " + transcript;
+        ws.send(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech Error:", event);
+        statusText.textContent = "Speech Error: " + event.error;
+      };
+    }
+  </script></body>
+</html>
