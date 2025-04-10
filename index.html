@@ -4,68 +4,154 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI GF - Pari</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-container {
+      text-align: center;
+      padding: 20px;
+    }
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(4) { animation-delay: 0.6s; }
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+    button {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #555; }
+    #mic-btn { font-size: 20px; }
+    #status, #ai-response { margin: 10px 0; }
+  </style>
 </head>
 <body>
-  <h2>AI GF Pari se Baat Karo</h2>
-  <button id="start">Start Talking</button>
-  <p id="status">Status: Disconnected</p>
-  <p id="ai-response"></p>
+  <div class="chat-container">
+    <h2>AI GF - Pari</h2>
+    <div id="dots" class="dots" style="display: none;">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <p id="status">Status: Connecting...</p>
+    <p id="ai-response"></p>
+    <button id="mic-btn" title="Tap to interrupt">🎙️</button>
+    <button id="new-chat">New Chat</button>
+  </div>
 
   <!-- Coqui TTS -->
   <script src="https://cdn.jsdelivr.net/npm/@coqui-ai/tts@latest/dist/tts.min.js"></script>
 
   <script>
     const ws = new WebSocket("wss://work-4ec6.onrender.com/ws");
-    const startBtn = document.getElementById("start");
     const statusText = document.getElementById("status");
     const aiText = document.getElementById("ai-response");
-
+    const dots = document.getElementById("dots");
+    const micBtn = document.getElementById("mic-btn");
+    const newChatBtn = document.getElementById("new-chat");
     let recognition;
 
     ws.onopen = () => {
       statusText.textContent = "Status: Connected to Pari...";
+      startRecognition();
     };
 
     ws.onmessage = async (event) => {
       const msg = event.data;
       aiText.textContent = "Pari: " + msg;
-      await speakWithCoqui(msg);
+      await speak(msg); // Coqui ya Web Speech API
+      dots.style.display = "none";
     };
 
-    async function speakWithCoqui(text) {
-      const speaker = "vits/ljspeech"; // Coqui ka default female model
-      const url = "https://models.silero.ai/v1/models/tts/tts_en"; // ya tum apna model bhi host kar sakte ho
-      const audio = await window.TTS.speak({
-        text: text,
-        voice: speaker,
-        streaming: true
-      });
+    async function speak(text) {
+      // Try Coqui TTS first
+      if (window.TTS) {
+        try {
+          const speaker = "vits/ljspeech";
+          const audio = await window.TTS.speak({
+            text: text,
+            voice: speaker,
+            streaming: true,
+            sampleRate: 22050
+          });
+          audio.play();
+          return;
+        } catch (error) {
+          console.error("Coqui TTS Error:", error);
+          statusText.textContent = "TTS Error with Coqui, using fallback...";
+        }
+      }
+
+      // Fallback to Web Speech API
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'hi-IN';
+      utterance.rate = 1.2; // Thoda fast
+      window.speechSynthesis.speak(utterance);
     }
 
-    startBtn.onclick = () => {
+    function startRecognition() {
       if (!('webkitSpeechRecognition' in window)) {
         alert('Speech Recognition not supported');
         return;
       }
-
       recognition = new webkitSpeechRecognition();
       recognition.lang = 'hi-IN';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-
-      recognition.start();
-      statusText.textContent = "Listening...";
-
+      recognition.continuous = true;
       recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = event.results[event.results.length - 1][0].transcript;
         statusText.textContent = "You: " + transcript;
         ws.send(transcript);
+        dots.style.display = "flex";
       };
-
       recognition.onerror = (event) => {
         console.error("Speech Error:", event);
         statusText.textContent = "Speech Error: " + event.error;
       };
+      recognition.start();
+    }
+
+    micBtn.onclick = () => {
+      if (recognition) {
+        recognition.stop();
+        micBtn.title = "Tap to start";
+      } else {
+        startRecognition();
+        micBtn.title = "Tap to interrupt";
+      }
+    };
+
+    newChatBtn.onclick = () => {
+      ws.send("New chat");
+      aiText.textContent = "";
+      statusText.textContent = "Starting new chat...";
     };
   </script>
 </body>
