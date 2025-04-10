@@ -1,38 +1,45 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI GF - Pari</title>
 </head>
 <body>
   <h2>AI GF Pari se Baat Karo</h2>
   <button id="start">Start Talking</button>
   <p id="status">Status: Disconnected</p>
-  <p id="ai-response"></p>  <script>
+  <p id="ai-response"></p>
+
+  <!-- Coqui TTS -->
+  <script src="https://cdn.jsdelivr.net/npm/@coqui-ai/tts@latest/dist/tts.min.js"></script>
+
+  <script>
+    const ws = new WebSocket("wss://work-4ec6.onrender.com/ws");
     const startBtn = document.getElementById("start");
     const statusText = document.getElementById("status");
     const aiText = document.getElementById("ai-response");
 
-    const ws = new WebSocket("wss://your-backend-url.onrender.com/ws");
     let recognition;
 
     ws.onopen = () => {
       statusText.textContent = "Status: Connected to Pari...";
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
       const msg = event.data;
       aiText.textContent = "Pari: " + msg;
-      speakText(msg);
+      await speakWithCoqui(msg);
     };
 
-    function speakText(text) {
-      const synth = window.speechSynthesis;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.voice = synth.getVoices().find(voice => voice.name.includes("Female") || voice.name.includes("Google")); // Customize voice
-      utter.pitch = 1.2;
-      utter.rate = 1;
-      synth.speak(utter);
+    async function speakWithCoqui(text) {
+      const speaker = "vits/ljspeech"; // Coqui ka default female model
+      const url = "https://models.silero.ai/v1/models/tts/tts_en"; // ya tum apna model bhi host kar sakte ho
+      const audio = await window.TTS.speak({
+        text: text,
+        voice: speaker,
+        streaming: true
+      });
     }
 
     startBtn.onclick = () => {
@@ -59,6 +66,7 @@
         console.error("Speech Error:", event);
         statusText.textContent = "Speech Error: " + event.error;
       };
-    }
-  </script></body>
+    };
+  </script>
+</body>
 </html>
