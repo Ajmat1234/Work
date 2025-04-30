@@ -8,11 +8,11 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "react": "^18.3.1",           // Latest stable version
-    "react-dom": "^18.3.1",       // Match with react
-    "react-router-dom": "^6.23.1", // Latest compatible version
-    "axios": "^1.7.2",            // Latest stable version
-    "react-scripts": "^5.0.1"     // Keeping 5.0.1 for now, can upgrade to 5.1.0 if needed
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
+    "axios": "^1.7.2",
+    "react-scripts": "^5.0.1"
   },
   "browserslist": {
     "production": [
@@ -27,6 +27,6 @@
     ]
   },
   "engines": {
-    "node": ">=18.0.0"            // Specify Node.js version for Vercel
+    "node": ">=18.0.0"
   }
 }
