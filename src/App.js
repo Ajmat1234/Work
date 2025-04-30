@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
-import axios from 'axios';
 
 // Main App Component
 function App() {
@@ -13,8 +12,7 @@ function App() {
 
   // Home Page Component
   function Home() {
-    const [blogs, setBlogs] = useState([
-      // Dummy data (backend se replace hoga)
+    const blogs = [
       {
         id: 1,
         title: 'The Future of AI',
@@ -27,29 +25,22 @@ function App() {
         content: 'Modern web development is evolving rapidly...',
         date: '2025-04-29',
       },
-    ]);
-
-    // Backend se data fetch karne ke liye (baad mein use hoga)
-    /*
-    useEffect(() => {
-      axios.get('YOUR_BACKEND_URL/api/blogs')
-        .then(response => setBlogs(response.data))
-        .catch(error => console.log(error));
-    }, []);
-    */
+    ];
 
     return (
       <div className="max-w-7xl mx-auto p-4">
-        <h1 className="text-4xl font-bold text-center mb-8">Latest Blogs</h1>
+        <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+          Latest Blogs
+        </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {blogs.map((blog, index) => (
+          {blogs.map((blog) => (
             <div
               key={blog.id}
               className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
             >
               <Link to={`/blog/${blog.id}`}>
                 <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400">{blog.title}</h2>
-                <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-3">{blog.content}</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">{blog.content}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">{blog.date}</p>
               </Link>
             </div>
@@ -76,7 +67,7 @@ function App() {
         date: '2025-04-29',
       },
     ];
-    const blog = blogs.find(b => b.id === parseInt(id));
+    const blog = blogs.find((b) => b.id === parseInt(id));
 
     return (
       <div className="max-w-4xl mx-auto p-4">
@@ -87,13 +78,13 @@ function App() {
             <p className="text-gray-700 dark:text-gray-300 mt-4">{blog.content}</p>
           </div>
         ) : (
-          <p>Blog not found!</p>
+          <p className="text-center text-gray-500 dark:text-gray-400">Blog not found!</p>
         )}
       </div>
     );
   }
 
-  // Render
+  // Main Render
   return (
     <BrowserRouter>
       <div className={theme === 'dark' ? 'dark' : ''}>
