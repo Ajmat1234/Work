@@ -33,7 +33,7 @@ function Blog() {
     { id: 1, title: 'The Future of AI', content: 'AI is changing the world... (full content)', date: '2025-04-30' },
     { id: 2, title: 'Web Dev Trends', content: 'Web dev is evolving fast... (full content)', date: '2025-04-29' },
   ];
-  const blog = blogs.find((b) => b.id === parseInt(id));
+  const blog = blogs.find((b) => Number(b.id) === Number(id)); // Explicit conversion
 
   return (
     <div className="max-w-4xl mx-auto p-4">
