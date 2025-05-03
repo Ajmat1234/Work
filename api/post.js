@@ -12,25 +12,50 @@ const redisClient = createClient({
   disableOfflineQueue: true,
   socket: {
     tls: true,
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    connectTimeout: 5000, // 5 सेकंड का टाइमआउट
+    reconnectStrategy: (retries) => Math.min(retries * 500, 3000) // री-कनेक्ट स्ट्रैटेजी
   }
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('connect', () => console.log('Redis Client Connected'));
+redisClient.on('ready', () => console.log('Redis Client Ready'));
+redisClient.on('end', () => console.log('Redis Client Disconnected'));
 
 // Redis कनेक्शन को चेक करें और कनेक्ट करें
 const ensureRedisConnection = async () => {
-  if (!redisClient.isOpen) {
-    console.log('Connecting to Redis...');
-    await redisClient.connect();
-    console.log('Redis connected successfully.');
+  try {
+    if (!redisClient.isOpen) {
+      console.log('Connecting to Redis...');
+      await redisClient.connect();
+      console.log('Redis connected successfully.');
+      return true;
+    } else {
+      console.log('Redis already connected.');
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to connect to Redis:', error);
+    return false; // कनेक्शन फेल होने पर false रिटर्न करें
   }
 };
 
 export default async function handler(req, res) {
+  let redisConnected = false;
+
   try {
-    // हर रिक्वेस्ट के लिए Redis कनेक्शन चेक करें
-    await ensureRedisConnection();
+    // Redis कनेक्शन चेक करें
+    redisConnected = await ensureRedisConnection();
+
+    if (!redisConnected) {
+      console.error('Redis connection failed. Returning default response.');
+      if (req.method === 'GET') {
+        return res.status(200).json([]); // खाली लिस्ट रिटर्न करें
+      } else {
+        return res.status(503).json({ message: 'Service unavailable: Unable to connect to Redis' });
+      }
+    }
 
     if (req.method === 'POST') {
       const newBlog = req.body;
@@ -73,9 +98,13 @@ export default async function handler(req, res) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   } finally {
     // कनेक्शन बंद करें (Vercel सर्वरलेस के लिए)
-    if (redisClient.isOpen) {
-      await redisClient.quit();
-      console.log('Redis connection closed.');
+    try {
+      if (redisClient.isOpen) {
+        await redisClient.quit();
+        console.log('Redis connection closed.');
+      }
+    } catch (error) {
+      console.error('Error closing Redis connection:', error);
     }
   }
 }
