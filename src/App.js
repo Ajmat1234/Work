@@ -121,21 +121,6 @@ function Blog({ blogs }) {
   return renderedOutput;
 }
 
-// API Route Component for Adding Posts
-function AddPost({ addBlog }) {
-  return (
-    <div>
-      <h1>API Route for Adding Posts</h1>
-      <p>
-        Send a POST request to <code>/api/post</code> with a JSON body containing the blog details.
-      </p>
-      <p>
-        Example: <code>{`{"id": 3, "title": "New Post", "content": "Content here...", "date": "2025-05-01", "tags": ["Tech"]}`}</code>
-      </p>
-    </div>
-  );
-}
-
 // Main App Component
 function App() {
   console.log("App component rendering...");
@@ -150,9 +135,36 @@ function App() {
     console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
   };
 
-  // Function to add a new blog post (for API route)
-  const addBlog = (newBlog) => {
-    setBlogs([...blogs, newBlog]);
+  // Function to add a new blog post via API
+  const addBlog = async (newBlog) => {
+    try {
+      const response = await fetch('/api/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBlog),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setBlogs([...blogs, data.blog]);
+        console.log('New blog added:', data.blog);
+      } else {
+        console.error('Error adding blog:', data.message);
+      }
+    } catch (error) {
+      console.error('Error adding blog:', error);
+    }
+  };
+
+  // Test function to simulate adding a blog (for manual testing)
+  const handleAddBlogTest = () => {
+    const newBlog = {
+      id: blogs.length + 1,
+      title: 'New Blog Post',
+      content: 'This is a new blog post added via API!',
+      date: new Date().toISOString().split('T')[0],
+      tags: ['Test', 'API'],
+    };
+    addBlog(newBlog);
   };
 
   const renderedOutput = (
@@ -173,6 +185,13 @@ function App() {
               >
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
+              {/* Test Button for Adding Blog */}
+              <button
+                onClick={handleAddBlogTest}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Add Test Blog
+              </button>
             </div>
           </div>
         </nav>
@@ -180,7 +199,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home blogs={blogs} />} />
           <Route path="/blog/:id" element={<Blog blogs={blogs} />} />
-          <Route path="/api/post" element={<AddPost addBlog={addBlog} />} />
         </Routes>
       </div>
     </div>
