@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
 
 // Home Page Component
@@ -135,37 +135,28 @@ function App() {
     console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
   };
 
-  // Function to add a new blog post via API
-  const addBlog = async (newBlog) => {
-    try {
-      const response = await fetch('/api/post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBlog),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setBlogs([...blogs, data.blog]);
-        console.log('New blog added:', data.blog);
-      } else {
-        console.error('Error adding blog:', data.message);
+  // Redis से डेटा लोड करें
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await fetch('/api/post', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (response.ok && Array.isArray(data)) {
+          setBlogs(data);
+          console.log('Blogs loaded from Redis:', data);
+        } else {
+          console.error('Error loading blogs:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
       }
-    } catch (error) {
-      console.error('Error adding blog:', error);
-    }
-  };
-
-  // Test function to simulate adding a blog (for manual testing)
-  const handleAddBlogTest = () => {
-    const newBlog = {
-      id: blogs.length + 1,
-      title: 'New Blog Post',
-      content: 'This is a new blog post added via API!',
-      date: new Date().toISOString().split('T')[0],
-      tags: ['Test', 'API'],
     };
-    addBlog(newBlog);
-  };
+
+    fetchBlogs();
+  }, []);
 
   const renderedOutput = (
     <div className={theme === 'dark' ? 'dark' : ''}>
@@ -184,13 +175,6 @@ function App() {
                 className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
               >
                 {theme === 'light' ? '🌙' : '☀️'}
-              </button>
-              {/* Test Button for Adding Blog */}
-              <button
-                onClick={handleAddBlogTest}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Add Test Blog
               </button>
             </div>
           </div>
