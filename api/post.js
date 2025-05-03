@@ -11,19 +11,28 @@ const redisClient = createClient({
   url: `redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}`,
   disableOfflineQueue: true,
   socket: {
-    tls: true,  // SSL सेटिंग जोड़ी
-    rejectUnauthorized: false  // Vercel सर्वरलेस में सर्टिफिकेट वैलिडेशन के लिए
+    tls: true,
+    rejectUnauthorized: false
   }
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 
-// Redis से कनेक्ट करें
-await redisClient.connect();
+// Redis कनेक्शन को चेक करें और कनेक्ट करें
+const ensureRedisConnection = async () => {
+  if (!redisClient.isOpen) {
+    console.log('Connecting to Redis...');
+    await redisClient.connect();
+    console.log('Redis connected successfully.');
+  }
+};
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
+  try {
+    // हर रिक्वेस्ट के लिए Redis कनेक्शन चेक करें
+    await ensureRedisConnection();
+
+    if (req.method === 'POST') {
       const newBlog = req.body;
 
       // Redis में blogs की लिस्ट रिट्रीव करें
@@ -37,22 +46,12 @@ export default async function handler(req, res) {
       await redisClient.set('blogs', JSON.stringify(blogs));
 
       res.status(200).json({ message: 'Blog added successfully!', blog: newBlog });
-    } catch (error) {
-      console.error('Error adding blog:', error);
-      res.status(500).json({ message: 'Error adding blog', error: error.message });
-    }
-  } else if (req.method === 'GET') {
-    try {
+    } else if (req.method === 'GET') {
       // Redis से blogs रिट्रीव करें
       let blogs = await redisClient.get('blogs');
       blogs = blogs ? JSON.parse(blogs) : [];
       res.status(200).json(blogs);
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      res.status(500).json({ message: 'Error fetching blogs', error: error.message });
-    }
-  } else if (req.method === 'PUT') {  // कमेंट्स के लिए नया मेथड
-    try {
+    } else if (req.method === 'PUT') {
       const { blogId, comment } = req.body;
 
       // ब्लॉग पोस्ट के लिए कमेंट्स की लिस्ट रिट्रीव करें
@@ -66,11 +65,17 @@ export default async function handler(req, res) {
       await redisClient.set(`blog:${blogId}:comments`, JSON.stringify(comments));
 
       res.status(200).json({ message: 'Comment added successfully!', comment });
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      res.status(500).json({ message: 'Error adding comment', error: error.message });
+    } else {
+      res.status(405).json({ message: 'Method not allowed' });
     }
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  } finally {
+    // कनेक्शन बंद करें (Vercel सर्वरलेस के लिए)
+    if (redisClient.isOpen) {
+      await redisClient.quit();
+      console.log('Redis connection closed.');
+    }
   }
 }
