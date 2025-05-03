@@ -13,7 +13,7 @@
     "react-router-dom": "^6.23.1",
     "axios": "^1.7.2",
     "react-scripts": "^5.0.1",
-    "@redis/client": "^1.5.14"
+    "redis": "^4.6.13"  // सही डिपेंडेंसी ऐड की
   },
   "browserslist": {
     "production": [
