@@ -1,15 +1,7 @@
 import { createClient } from 'redis';
 
-const REDIS_HOST = "redis-11005.c8.us-east-1-2.ec2.redns.redis-cloud.com";
-const REDIS_PORT = 11005;
-const REDIS_USERNAME = "default";
-const REDIS_PASSWORD = "MgE5WoDPo33u4beo955kGV4pYlUkWvmg";
-const REDIS_DB = 0;
-
-// Redis क्लाइंट सेटअप
 const redisClient = createClient({
-  url: `redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}`,
-  disableOfflineQueue: true,
+  url: process.env.REDIS_URL, // Vercel का नया Redis URL
   socket: {
     tls: true,
     rejectUnauthorized: false,
@@ -107,4 +99,4 @@ export default async function handler(req, res) {
       console.error('Error closing Redis connection:', error);
     }
   }
-}
+                          }
