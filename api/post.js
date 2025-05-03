@@ -1,4 +1,3 @@
-// api/post.js
 import { createClient } from 'redis';
 
 const REDIS_HOST = "redis-11005.c8.us-east-1-2.ec2.redns.redis-cloud.com";
@@ -11,6 +10,10 @@ const REDIS_DB = 0;
 const redisClient = createClient({
   url: `redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}`,
   disableOfflineQueue: true,
+  socket: {
+    tls: true,  // SSL सेटिंग जोड़ी
+    rejectUnauthorized: false  // Vercel सर्वरलेस में सर्टिफिकेट वैलिडेशन के लिए
+  }
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err));
@@ -47,6 +50,25 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('Error fetching blogs:', error);
       res.status(500).json({ message: 'Error fetching blogs', error: error.message });
+    }
+  } else if (req.method === 'PUT') {  // कमेंट्स के लिए नया मेथड
+    try {
+      const { blogId, comment } = req.body;
+
+      // ब्लॉग पोस्ट के लिए कमेंट्स की लिस्ट रिट्रीव करें
+      let comments = await redisClient.get(`blog:${blogId}:comments`);
+      comments = comments ? JSON.parse(comments) : [];
+
+      // नया कमेंट जोड़ें
+      comments.push(comment);
+
+      // अपडेटेड कमेंट्स लिस्ट को Redis में सेव करें
+      await redisClient.set(`blog:${blogId}:comments`, JSON.stringify(comments));
+
+      res.status(200).json({ message: 'Comment added successfully!', comment });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).json({ message: 'Error adding comment', error: error.message });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
