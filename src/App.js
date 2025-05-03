@@ -2,41 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
 
 // Home Page Component
-function Home({ blogs }) {
+function Home({ blogs, fetchBlogs }) {
   console.log("Home component rendering...");
 
   const renderedOutput = (
     <div className="max-w-7xl mx-auto p-4">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-900">Latest Blogs</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blogs.map((blog) => (
-          <div
-            key={blog.id}
-            className="bg-white p-8 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-          >
-            <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
-              <h2 className="text-xl font-semibold leading-6">{blog.title}</h2>
-              <p className="text-gray-600 mt-3 leading-relaxed">{blog.content}</p>
-              <p className="text-sm text-gray-500 mt-4">{blog.date}</p>
-              {/* Tags */}
-              <div className="mt-3 flex space-x-2">
-                {blog.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              {/* Read More Button */}
-              <button className="mt-4 text-blue-600 hover:underline">
-                Read More
-              </button>
-            </Link>
-          </div>
-        ))}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-center text-gray-900 dark:text-white">Latest Blogs</h1>
+        <button
+          onClick={fetchBlogs}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Refresh Blogs
+        </button>
       </div>
+      {blogs.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {blogs.map((blog) => (
+            <div
+              key={blog.id}
+              className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+            >
+              <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
+                <h2 className="text-xl font-semibold leading-6">{blog.title}</h2>
+                <p className="text-gray-600 dark:text-gray-300 mt-3 leading-relaxed">{blog.content}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">{blog.date}</p>
+                {/* Tags */}
+                <div className="mt-3 flex space-x-2">
+                  {blog.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                {/* Read More Button */}
+                <button className="mt-4 text-blue-600 hover:underline">
+                  Read More
+                </button>
+              </Link>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500 dark:text-gray-400">No blogs available.</p>
+      )}
     </div>
   );
 
@@ -54,22 +66,70 @@ function Blog({ blogs }) {
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleCommentSubmit = (e) => {
+  // कमेंट्स लोड करें
+  useEffect(() => {
+    const fetchComments = async () => {
+      setLoadingComments(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/post?blogId=${id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (response.ok && Array.isArray(data)) {
+          setComments(data);
+          console.log('Comments loaded from Redis:', data);
+        } else {
+          setError('Failed to load comments.');
+          console.error('Error loading comments:', data.message);
+        }
+      } catch (error) {
+        setError('An error occurred while fetching comments.');
+        console.error('Error fetching comments:', error);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
+    fetchComments();
+  }, [id]);
+
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (newComment.trim()) {
-      setComments([...comments, { text: newComment, date: new Date().toISOString().split('T')[0] }]);
-      setNewComment('');
+      const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
+      
+      // Redis में कमेंट सेव करें
+      try {
+        const response = await fetch('/api/post', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blogId: id, comment }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setComments([...comments, comment]);
+          setNewComment('');
+        } else {
+          console.error('Error saving comment:', data.message);
+        }
+      } catch (error) {
+        console.error('Error saving comment:', error);
+      }
     }
   };
 
   const renderedOutput = (
     <div className="max-w-4xl mx-auto p-4">
       {blog ? (
-        <div className="bg-white p-8 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
           <h1 className="text-3xl font-bold text-blue-600">{blog.title}</h1>
-          <p className="text-sm text-gray-500 mt-2">{blog.date}</p>
-          <p className="text-gray-700 mt-4 leading-relaxed">{blog.content}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{blog.date}</p>
+          <p className="text-gray-700 dark:text-gray-300 mt-4 leading-relaxed">{blog.content}</p>
           {/* Tags */}
           <div className="mt-3 flex space-x-2">
             {blog.tags.map((tag, index) => (
@@ -83,22 +143,26 @@ function Blog({ blogs }) {
           </div>
           {/* Comments Section */}
           <div className="mt-8">
-            <h3 className="text-lg font-semibold text-gray-900">Comments</h3>
-            {comments.length > 0 ? (
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Comments</h3>
+            {loadingComments ? (
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Loading comments...</p>
+            ) : error ? (
+              <p className="text-red-500 mt-2">{error}</p>
+            ) : comments.length > 0 ? (
               comments.map((comment, index) => (
-                <div key={index} className="mt-4 p-4 bg-gray-100 rounded-lg">
-                  <p className="text-gray-700">{comment.text}</p>
-                  <p className="text-sm text-gray-500">{comment.date}</p>
+                <div key={index} className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <p className="text-gray-700 dark:text-gray-300">{comment.text}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{comment.date}</p>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 mt-2">No comments yet. Be the first to comment!</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">No comments yet. Be the first to comment!</p>
             )}
             <form onSubmit={handleCommentSubmit} className="mt-4">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-3 border rounded-lg"
+                className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-900"
                 placeholder="Add a comment..."
                 rows="3"
               />
@@ -112,7 +176,7 @@ function Blog({ blogs }) {
           </div>
         </div>
       ) : (
-        <p className="text-center text-gray-500">Blog not found!</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">Blog not found!</p>
       )}
     </div>
   );
@@ -125,10 +189,9 @@ function Blog({ blogs }) {
 function App() {
   console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
-  const [blogs, setBlogs] = useState([
-    { id: 1, title: 'The Future of AI', content: 'AI is changing the world...', date: '2025-04-30', tags: ['AI', 'Tech'] },
-    { id: 2, title: 'Web Dev Trends', content: 'Web dev is evolving fast...', date: '2025-04-29', tags: ['Web Dev', 'Tech'] },
-  ]);
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -136,25 +199,31 @@ function App() {
   };
 
   // Redis से डेटा लोड करें
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const response = await fetch('/api/post', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const data = await response.json();
-        if (response.ok && Array.isArray(data)) {
-          setBlogs(data);
-          console.log('Blogs loaded from Redis:', data);
-        } else {
-          console.error('Error loading blogs:', data.message);
-        }
-      } catch (error) {
-        console.error('Error fetching blogs:', error);
+  const fetchBlogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/post', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (response.ok && Array.isArray(data)) {
+        setBlogs(data);
+        console.log('Blogs loaded from Redis:', data);
+      } else {
+        setError('Failed to load blogs. Please try again.');
+        console.error('Error loading blogs:', data.message);
       }
-    };
+    } catch (error) {
+      setError('An error occurred while fetching blogs.');
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBlogs();
   }, []);
 
@@ -180,10 +249,26 @@ function App() {
           </div>
         </nav>
 
-        <Routes>
-          <Route path="/" element={<Home blogs={blogs} />} />
-          <Route path="/blog/:id" element={<Blog blogs={blogs} />} />
-        </Routes>
+        {loading ? (
+          <div className="text-center mt-8">
+            <p className="text-gray-500 dark:text-gray-400">Loading blogs...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center mt-8">
+            <p className="text-red-500">{error}</p>
+            <button
+              onClick={fetchBlogs}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <Routes>
+            <Route path="/" element={<Home blogs={blogs} fetchBlogs={fetchBlogs} />} />
+            <Route path="/blog/:id" element={<Blog blogs={blogs} />} />
+          </Routes>
+        )}
       </div>
     </div>
   );
