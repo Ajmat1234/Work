@@ -21,11 +21,28 @@ function Home({ blogs, fetchBlogs }) {
           {blogs.map((blog) => (
             <div
               key={blog.id}
-              className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
             >
               <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
-                <h2 className="text-xl font-semibold leading-6">{blog.title}</h2>
-                <p className="text-gray-600 dark:text-gray-300 mt-3 leading-relaxed">{blog.content}</p>
+                <h2 className="text-xl font-semibold leading-6 text-purple-600 dark:text-purple-400">{blog.title}</h2>
+                <div className="mt-3 leading-relaxed">
+                  {blog.content.split('\n').map((line, index) => {
+                    if (line.startsWith('**Question:')) {
+                      return (
+                        <p key={index} className="text-lg font-semibold text-pink-600 dark:text-pink-400">
+                          {line.replace('**Question:', '').trim()}
+                        </p>
+                      );
+                    } else if (line.startsWith('Answer:')) {
+                      return (
+                        <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                          {line.replace('Answer:', '').trim()}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">{blog.date}</p>
                 {/* Tags */}
                 <div className="mt-3 flex space-x-2">
@@ -69,7 +86,7 @@ function Blog({ blogs }) {
   const [loadingComments, setLoadingComments] = useState(true);
   const [error, setError] = useState(null);
 
-  // कमेंट्स लोड करें
+  // Load comments
   useEffect(() => {
     const fetchComments = async () => {
       setLoadingComments(true);
@@ -82,7 +99,7 @@ function Blog({ blogs }) {
         const data = await response.json();
         if (response.ok && Array.isArray(data)) {
           setComments(data);
-          console.log('Comments loaded from Redis:', data);
+          console.log('Comments loaded:', data);
         } else {
           setError('Failed to load comments.');
           console.error('Error loading comments:', data.message);
@@ -103,7 +120,6 @@ function Blog({ blogs }) {
     if (newComment.trim()) {
       const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
       
-      // Redis में कमेंट सेव करें
       try {
         const response = await fetch('/api/post', {
           method: 'PUT',
@@ -112,7 +128,14 @@ function Blog({ blogs }) {
         });
         const data = await response.json();
         if (response.ok) {
-          setComments([...comments, comment]);
+          // Add comment to UI only after successful backend save
+          setComments((prevComments) => {
+            // Avoid duplicates in UI
+            if (prevComments.some(c => c.text === comment.text && c.date === comment.date)) {
+              return prevComments;
+            }
+            return [...prevComments, comment];
+          });
           setNewComment('');
         } else {
           console.error('Error saving comment:', data.message);
@@ -127,9 +150,26 @@ function Blog({ blogs }) {
     <div className="max-w-4xl mx-auto p-4">
       {blog ? (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-          <h1 className="text-3xl font-bold text-blue-600">{blog.title}</h1>
+          <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{blog.title}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{blog.date}</p>
-          <p className="text-gray-700 dark:text-gray-300 mt-4 leading-relaxed">{blog.content}</p>
+          <div className="mt-4 leading-relaxed">
+            {blog.content.split('\n').map((line, index) => {
+              if (line.startsWith('**Question:')) {
+                return (
+                  <p key={index} className="text-lg font-semibold text-pink-600 dark:text-pink-400">
+                    {line.replace('**Question:', '').trim()}
+                  </p>
+                );
+              } else if (line.startsWith('Answer:')) {
+                return (
+                  <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                    {line.replace('Answer:', '').trim()}
+                  </p>
+                );
+              }
+              return null;
+            })}
+          </div>
           {/* Tags */}
           <div className="mt-3 flex space-x-2">
             {blog.tags.map((tag, index) => (
@@ -198,7 +238,7 @@ function App() {
     console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
   };
 
-  // Redis से डेटा लोड करें
+  // Fetch blogs
   const fetchBlogs = async () => {
     setLoading(true);
     setError(null);
@@ -210,7 +250,7 @@ function App() {
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
         setBlogs(data);
-        console.log('Blogs loaded from Redis:', data);
+        console.log('Blogs loaded:', data);
       } else {
         setError('Failed to load blogs. Please try again.');
         console.error('Error loading blogs:', data.message);
