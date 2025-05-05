@@ -47,10 +47,10 @@ function Home({ blogs, fetchBlogs }) {
                           {line.replace('**Question:', '').replace('**', '').trim()}
                         </p>
                       );
-                    } else if (line.startsWith('**Answer:**')) {
+                    } else if (line.startsWith('**Answer')) {
                       return (
                         <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
-                          {line.replace('**Answer:**', '').trim()}
+                          {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
                         </p>
                       );
                     }
@@ -191,10 +191,10 @@ function Blog({ blogs }) {
                     {line.replace('**Question:', '').replace('**', '').trim()}
                   </p>
                 );
-              } else if (line.startsWith('**Answer:**')) {
+              } else if (line.startsWith('**Answer')) {
                 return (
                   <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
-                    {line.replace('**Answer:**', '').trim()}
+                    {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
                   </p>
                 );
               }
