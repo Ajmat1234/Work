@@ -13,13 +13,7 @@
     "react-router-dom": "^6.23.1",
     "axios": "^1.7.2",
     "react-scripts": "^5.0.1",
-    "redis": "^4.6.13",
-    "react-helmet": "^6.1.0"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.3",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19"
+    "redis": "^4.6.13"
   },
   "browserslist": {
     "production": [
