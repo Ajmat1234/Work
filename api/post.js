@@ -2,8 +2,6 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const newBlog = req.body;
-
-      // Check if blog with same title already exists
       const checkResponse = await fetch('https://auto-generated.onrender.com/api/post', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
