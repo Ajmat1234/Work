@@ -3,7 +3,16 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const newBlog = req.body;
 
-      // बैकएंड API को कॉल करें
+      // Check if blog with same title already exists
+      const checkResponse = await fetch('https://auto-generated.onrender.com/api/post', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const existingBlogs = await checkResponse.json();
+      if (existingBlogs.some(blog => blog.title === newBlog.title)) {
+        return res.status(200).json({ message: "Blog already exists", blog: newBlog });
+      }
+
       const response = await fetch('https://auto-generated.onrender.com/api/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -17,7 +26,6 @@ export default async function handler(req, res) {
         res.status(response.status).json(data);
       }
     } else if (req.method === 'GET') {
-      // बैकएंड API से ब्लॉग्स लें
       const blogId = req.query.blogId;
       const url = blogId 
         ? `https://auto-generated.onrender.com/api/post?blogId=${blogId}` 
@@ -37,7 +45,6 @@ export default async function handler(req, res) {
     } else if (req.method === 'PUT') {
       const { blogId, comment } = req.body;
 
-      // बैकएंड API को कमेंट भेजें
       const response = await fetch('https://auto-generated.onrender.com/api/post', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
