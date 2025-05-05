@@ -5,7 +5,7 @@ function Home({ blogs, fetchBlogs }) {
   console.log("Home component rendering...");
 
   const sharePost = (blog) => {
-    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on My Blog!`;
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
     const shareUrl = window.location.origin + `/blog/${blog.id}`;
     if (navigator.share) {
       navigator.share({
@@ -21,7 +21,7 @@ function Home({ blogs, fetchBlogs }) {
 
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 sticky top-0 bg-gray-100 dark:bg-gray-900 z-10 p-4">
         <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">Latest Blogs</h1>
         <button
           onClick={fetchBlogs}
@@ -39,7 +39,7 @@ function Home({ blogs, fetchBlogs }) {
             >
               <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
                 <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h2>
-                <div className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
                   {blog.content.split('\n').map((line, index) => {
                     if (line.startsWith('**Question:')) {
                       return (
@@ -163,7 +163,7 @@ function Blog({ blogs }) {
   };
 
   const sharePost = () => {
-    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on My Blog!`;
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
     const shareUrl = window.location.href;
     if (navigator.share) {
       navigator.share({
@@ -183,7 +183,7 @@ function Blog({ blogs }) {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{blog.date}</p>
-          <div className="leading-relaxed">
+          <div className="leading-relaxed text-justify">
             {blog.content.split('\n').map((line, index) => {
               if (line.startsWith('**Question:')) {
                 return (
@@ -306,7 +306,7 @@ function App() {
         <nav className="bg-white dark:bg-gray-800 shadow-lg p-4 sticky top-0 z-10">
           <div className="max-w-3xl mx-auto flex justify-between items-center">
             <Link to="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              My Blog
+              Ajmat's Blog
             </Link>
             <div className="flex items-center space-x-4">
               <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">
