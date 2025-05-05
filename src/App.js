@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
 
-// Home Page Component
 function Home({ blogs, fetchBlogs }) {
   console.log("Home component rendering...");
+
+  const sharePost = (blog) => {
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on My Blog!`;
+    const shareUrl = window.location.origin + `/blog/${blog.id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: blog.title,
+        text: shareText,
+        url: shareUrl,
+      }).catch((error) => console.error('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      alert('Link copied to clipboard!');
+    }
+  };
 
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
@@ -54,10 +68,18 @@ function Home({ blogs, fetchBlogs }) {
                     </span>
                   ))}
                 </div>
-                <button className="mt-3 text-blue-600 hover:underline text-sm">
-                  Read More
-                </button>
               </Link>
+              <div className="mt-3 flex justify-between">
+                <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:underline text-sm">
+                  Read More
+                </Link>
+                <button
+                  onClick={() => sharePost(blog)}
+                  className="text-green-600 hover:underline text-sm"
+                >
+                  Share
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -71,7 +93,6 @@ function Home({ blogs, fetchBlogs }) {
   return renderedOutput;
 }
 
-// Blog Post Page Component
 function Blog({ blogs }) {
   console.log("Blog component rendering...");
   const { id } = useParams();
@@ -84,7 +105,6 @@ function Blog({ blogs }) {
   const [loadingComments, setLoadingComments] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load comments
   useEffect(() => {
     const fetchComments = async () => {
       setLoadingComments(true);
@@ -142,6 +162,21 @@ function Blog({ blogs }) {
     }
   };
 
+  const sharePost = () => {
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on My Blog!`;
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      navigator.share({
+        title: blog.title,
+        text: shareText,
+        url: shareUrl,
+      }).catch((error) => console.error('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      alert('Link copied to clipboard!');
+    }
+  };
+
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
       {blog ? (
@@ -176,6 +211,12 @@ function Blog({ blogs }) {
               </span>
             ))}
           </div>
+          <button
+            onClick={sharePost}
+            className="mt-3 text-green-600 hover:underline text-sm"
+          >
+            Share
+          </button>
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Comments</h3>
             {loadingComments ? (
@@ -219,7 +260,6 @@ function Blog({ blogs }) {
   return renderedOutput;
 }
 
-// Main App Component
 function App() {
   console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
