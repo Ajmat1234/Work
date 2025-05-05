@@ -19,20 +19,14 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
+  // Sort blogs by date in descending order (newest first)
+  const sortedBlogs = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6 sticky top-0 bg-gray-100 dark:bg-gray-900 z-10 p-4">
-        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">Latest Blogs</h1>
-        <button
-          onClick={fetchBlogs}
-          className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-        >
-          Refresh Blogs
-        </button>
-      </div>
-      {blogs.length > 0 ? (
+      {sortedBlogs.length > 0 ? (
         <div className="space-y-6">
-          {blogs.map((blog) => (
+          {sortedBlogs.map((blog) => (
             <div
               key={blog.id}
               className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
@@ -303,24 +297,38 @@ function App() {
   const renderedOutput = (
     <div className={theme === 'dark' ? 'dark' : ''}>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        <nav className="bg-white dark:bg-gray-800 shadow-lg p-4 sticky top-0 z-10">
-          <div className="max-w-3xl mx-auto flex justify-between items-center">
-            <Link to="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              Ajmat's Blog
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Home
+        {/* Combined Navigation and Latest Blogs/Refresh Blogs Section */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-lg p-4">
+          <div className="max-w-3xl mx-auto flex flex-col gap-2">
+            {/* Navigation Bar */}
+            <div className="flex justify-between items-center">
+              <Link to="/" className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                Ajmat's Blog
               </Link>
+              <div className="flex items-center space-x-4">
+                <Link to="/" className="text-sm hover:text-blue-600 dark:hover:text-blue-400">
+                  Home
+                </Link>
+                <button
+                  onClick={toggleTheme}
+                  className="p-1 rounded-full bg-gray-200 dark:bg-gray-700"
+                >
+                  {theme === 'light' ? '🌙' : '☀️'}
+                </button>
+              </div>
+            </div>
+            {/* Latest Blogs and Refresh Blogs */}
+            <div className="flex justify-between items-center">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Latest Blogs</h1>
               <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+                onClick={fetchBlogs}
+                className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
               >
-                {theme === 'light' ? '🌙' : '☀️'}
+                Refresh Blogs
               </button>
             </div>
           </div>
-        </nav>
+        </div>
 
         {loading ? (
           <div className="text-center mt-8">
