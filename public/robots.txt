@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://work-lyart-rho.vercel.app/sitemap.xml
