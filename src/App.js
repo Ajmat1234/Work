@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 function Home({ blogs, fetchBlogs }) {
   console.log("Home component rendering...");
@@ -300,13 +301,24 @@ function Blog({ blogs }) {
 function App() {
   console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [blogs, setBlogs] = useState([
+    {
+      id: 1,
+      title: "Sample Blog",
+      content: "**Question:** What is React?\n**Answer 1:** React is a JavaScript library.",
+      date: "2025-05-05",
+      tags: ["react", "javascript"],
+    },
+  ]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-    console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
+    setTheme((prevTheme) => {
+      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
+      console.log("Theme toggled to:", newTheme);
+      return newTheme;
+    });
   };
 
   const fetchBlogs = async () => {
@@ -334,7 +346,7 @@ function App() {
   };
 
   useEffect(() => {
-    fetchBlogs();
+    // fetchBlogs();
   }, []);
 
   const renderedOutput = (
