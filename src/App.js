@@ -125,25 +125,20 @@ function Blog({ blogs }) {
       setLoadingComments(true);
       setError(null);
       try {
-        const response = await fetch(`https://auto-generated.onrender.com/api/post?blogId=${id}`, {
+        const response = await fetch(`/api/post?blogId=${id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
-        if (response.ok) {
-          if (Array.isArray(data)) {
-            setComments(data);
-            console.log('Comments loaded:', data);
-          } else {
-            setComments([]);
-            console.log('No comments found for this blog.');
-          }
+        if (response.ok && Array.isArray(data)) {
+          setComments(data);
+          console.log('Comments loaded:', data);
         } else {
-          setError('Failed to load comments: ' + (data.message || 'Unknown error'));
+          setError('Failed to load comments.');
           console.error('Error loading comments:', data.message);
         }
       } catch (error) {
-        setError('An error occurred while fetching comments: ' + error.message);
+        setError('An error occurred while fetching comments.');
         console.error('Error fetching comments:', error);
       } finally {
         setLoadingComments(false);
@@ -159,7 +154,7 @@ function Blog({ blogs }) {
       const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
       
       try {
-        const response = await fetch('https://auto-generated.onrender.com/api/post', {
+        const response = await fetch('/api/post', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ blogId: id, comment }),
@@ -306,7 +301,15 @@ function Blog({ blogs }) {
 function App() {
   console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState([
+    {
+      id: 1,
+      title: "Sample Blog",
+      content: "**Question:** What is React?\n**Answer 1:** React is a JavaScript library.",
+      date: "2025-05-05",
+      tags: ["react", "javascript"],
+    },
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -322,26 +325,20 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://auto-generated.onrender.com/api/post', {
+      const response = await fetch('/api/post', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await response.json();
-      if (response.ok) {
-        if (Array.isArray(data)) {
-          setBlogs(data);
-          console.log('Blogs loaded:', data);
-        } else {
-          setBlogs([]);
-          setError('No blogs found in the response.');
-          console.log('No blogs found:', data);
-        }
+      if (response.ok && Array.isArray(data)) {
+        setBlogs(data);
+        console.log('Blogs loaded:', data);
       } else {
-        setError('Failed to load blogs: ' + (data.message || 'Unknown error'));
+        setError('Failed to load blogs. Please try again.');
         console.error('Error loading blogs:', data.message);
       }
     } catch (error) {
-      setError('An error occurred while fetching blogs: ' + error.message);
+      setError('An error occurred while fetching blogs.');
       console.error('Error fetching blogs:', error);
     } finally {
       setLoading(false);
@@ -349,7 +346,7 @@ function App() {
   };
 
   useEffect(() => {
-    fetchBlogs();
+    // fetchBlogs();
   }, []);
 
   const renderedOutput = (
