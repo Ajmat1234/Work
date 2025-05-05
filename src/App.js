@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 
 function Home({ blogs, fetchBlogs }) {
   console.log("Home component rendering...");
@@ -50,22 +49,8 @@ function Home({ blogs, fetchBlogs }) {
                       );
                     } else if (line.startsWith('**Answer')) {
                       return (
-                        <div key={index} className="mt-2">
-                          <p className="text-gray-700 dark:text-gray-300 font-medium">
-                            Answer {line.match(/\d+/)[0]}:
-                          </p>
-                          <p className="text-gray-700 dark:text-gray-300">
-                            {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
-                          </p>
-                        </div>
-                      );
-                    } else if (line.startsWith('**Related Post:**')) {
-                      const [text, url] = line.split('](');
-                      const title = text.replace('**Related Post:** [', '').trim();
-                      const link = url.replace(')', '').trim();
-                      return (
-                        <p key={index} className="mt-3 text-blue-600 hover:underline">
-                          Related Post: <a href={link}>{title}</a>
+                        <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                          {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
                         </p>
                       );
                     }
@@ -196,15 +181,6 @@ function Blog({ blogs }) {
     <div className="max-w-3xl mx-auto p-4">
       {blog ? (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-          {/* Dynamic Meta Tags */}
-          <Helmet>
-            <title>{blog.title} - My Blog</title>
-            <meta name="description" content={blog.content.split('\n').slice(0, 2).join(' ').replace(/\*\*/g, '').substring(0, 160)} />
-            <meta name="keywords" content={blog.tags.join(', ')} />
-            <meta property="og:title" content={blog.title} />
-            <meta property="og:description" content={blog.content.split('\n').slice(0, 2).join(' ').replace(/\*\*/g, '').substring(0, 160)} />
-            <meta property="og:url" content={window.location.href} />
-          </Helmet>
           <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{blog.date}</p>
           <div className="leading-relaxed">
@@ -217,22 +193,8 @@ function Blog({ blogs }) {
                 );
               } else if (line.startsWith('**Answer')) {
                 return (
-                  <div key={index} className="mt-2">
-                    <p className="text-gray-700 dark:text-gray-300 font-medium">
-                      Answer {line.match(/\d+/)[0]}:
-                    </p>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
-                    </p>
-                  </div>
-                );
-              } else if (line.startsWith('**Related Post:**')) {
-                const [text, url] = line.split('](');
-                const title = text.replace('**Related Post:** [', '').trim();
-                const link = url.replace(')', '').trim();
-                return (
-                  <p key={index} className="mt-3 text-blue-600 hover:underline">
-                    Related Post: <a href={link}>{title}</a>
+                  <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                    {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
                   </p>
                 );
               }
@@ -301,24 +263,13 @@ function Blog({ blogs }) {
 function App() {
   console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
-  const [blogs, setBlogs] = useState([
-    {
-      id: 1,
-      title: "Sample Blog",
-      content: "**Question:** What is React?\n**Answer 1:** React is a JavaScript library.",
-      date: "2025-05-05",
-      tags: ["react", "javascript"],
-    },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-      console.log("Theme toggled to:", newTheme);
-      return newTheme;
-    });
+    setTheme(theme === 'light' ? 'dark' : 'light');
+    console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
   };
 
   const fetchBlogs = async () => {
@@ -346,7 +297,7 @@ function App() {
   };
 
   useEffect(() => {
-    // fetchBlogs();
+    fetchBlogs();
   }, []);
 
   const renderedOutput = (
