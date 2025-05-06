@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/post",
+      "destination": "https://auto-generated.onrender.com/api/post"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "https://auto-generated.onrender.com/sitemap.xml"
     }
