@@ -313,7 +313,7 @@ function App() {
                   onClick={toggleTheme}
                   className="p-1 rounded-full bg-gray-200 dark:bg-gray-700"
                 >
-                  {theme === 'light' ? 'ðŸŒ™' : 'â˜€ï¸'}
+                  {theme === 'light' ? '🌙' : '☀️'}
                 </button>
               </div>
             </div>
