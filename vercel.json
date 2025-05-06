@@ -1,12 +1,9 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/post",
-      "destination": "https://auto-generated.onrender.com/api/post"
-    },
+  "redirects": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://auto-generated.onrender.com/sitemap.xml"
+      "destination": "https://auto-generated.onrender.com/sitemap.xml",
+      "permanent": true
     }
   ]
 }
