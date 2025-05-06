@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
 
 function Home({ blogs, fetchBlogs }) {
-  console.log("Home component rendering...");
-
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
     const shareUrl = window.location.origin + `/blog/${blog.id}`;
@@ -19,22 +17,22 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
-  // Sort blogs by date in descending order (newest first)
-  const sortedBlogs = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
-
+  // Sorting hata diya, direct blogs use karenge
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      {sortedBlogs.length > 0 ? (
+      {blogs && blogs.length > 0 ? (
         <div className="space-y-6">
-          {sortedBlogs.map((blog) => (
+          {blogs.map((blog) => (
             <div
-              key={blog.id}
+              key={blog.id || blog.title} // Fallback to title if id is missing
               className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
               <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
-                <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h2>
+                <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">
+                  {blog.title || 'Untitled Post'}
+                </h2>
                 <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
-                  {blog.content.split('\n').map((line, index) => {
+                  {blog.content && blog.content.split('\n').map((line, index) => {
                     if (line.startsWith('**Question:')) {
                       return (
                         <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
@@ -51,16 +49,22 @@ function Home({ blogs, fetchBlogs }) {
                     return null;
                   })}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">{blog.date}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  {blog.date || 'No date available'}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {blog.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {blog.tags && blog.tags.length > 0 ? (
+                    blog.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-500">No tags</span>
+                  )}
                 </div>
               </Link>
               <div className="mt-3 flex justify-between">
@@ -83,16 +87,12 @@ function Home({ blogs, fetchBlogs }) {
     </div>
   );
 
-  console.log("Home component rendered successfully!");
   return renderedOutput;
 }
 
 function Blog({ blogs }) {
-  console.log("Blog component rendering...");
   const { id } = useParams();
-  console.log("Blog ID from useParams:", id);
   const blog = blogs.find((b) => Number(b.id) === Number(id));
-  console.log("Found blog:", blog);
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -111,14 +111,11 @@ function Blog({ blogs }) {
         const data = await response.json();
         if (response.ok && Array.isArray(data)) {
           setComments(data);
-          console.log('Comments loaded:', data);
         } else {
           setError('Failed to load comments.');
-          console.error('Error loading comments:', data.message);
         }
       } catch (error) {
         setError('An error occurred while fetching comments.');
-        console.error('Error fetching comments:', error);
       } finally {
         setLoadingComments(false);
       }
@@ -147,8 +144,6 @@ function Blog({ blogs }) {
             return [...prevComments, comment];
           });
           setNewComment('');
-        } else {
-          console.error('Error saving comment:', data.message);
         }
       } catch (error) {
         console.error('Error saving comment:', error);
@@ -175,10 +170,14 @@ function Blog({ blogs }) {
     <div className="max-w-3xl mx-auto p-4">
       {blog ? (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{blog.date}</p>
+          <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+            {blog.title || 'Untitled Post'}
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {blog.date || 'No date available'}
+          </p>
           <div className="leading-relaxed text-justify">
-            {blog.content.split('\n').map((line, index) => {
+            {blog.content && blog.content.split('\n').map((line, index) => {
               if (line.startsWith('**Question:')) {
                 return (
                   <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
@@ -196,14 +195,18 @@ function Blog({ blogs }) {
             })}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            {blog.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
-              >
-                {tag}
-              </span>
-            ))}
+            {blog.tags && blog.tags.length > 0 ? (
+              blog.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                >
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-gray-500">No tags</span>
+            )}
           </div>
           <button
             onClick={sharePost}
@@ -250,12 +253,10 @@ function Blog({ blogs }) {
     </div>
   );
 
-  console.log("Blog component rendered successfully!");
   return renderedOutput;
 }
 
 function App() {
-  console.log("App component rendering...");
   const [theme, setTheme] = useState('light');
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -263,7 +264,6 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
-    console.log("Theme toggled to:", theme === 'light' ? 'dark' : 'light');
   };
 
   const fetchBlogs = async () => {
@@ -276,15 +276,13 @@ function App() {
       });
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
-        setBlogs(data);
-        console.log('Blogs loaded:', data);
+        setBlogs([]); // State reset to ensure fresh data
+        setBlogs(data); // Update with new data
       } else {
         setError('Failed to load blogs. Please try again.');
-        console.error('Error loading blogs:', data.message);
       }
     } catch (error) {
       setError('An error occurred while fetching blogs.');
-      console.error('Error fetching blogs:', error);
     } finally {
       setLoading(false);
     }
@@ -354,7 +352,6 @@ function App() {
     </div>
   );
 
-  console.log("App component rendered successfully!");
   return renderedOutput;
 }
 
