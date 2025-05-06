@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://work-lyart-rho.vercel.app/</loc>
+    <priority>1.00</priority>
+  </url>
+  <!-- Optional: Agar tumhare paas specific blog post URLs hain to yeh add karo -->
+  <url>
+    <loc>https://work-lyart-rho.vercel.app/post/space-ai</loc>
+    <priority>0.80</priority>
+  </url>
+  -->
+</urlset>
