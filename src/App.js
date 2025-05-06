@@ -133,14 +133,52 @@ function Blog({ blogs }) {
   console.log("Blog component rendering...");
   const { id } = useParams();
   console.log("Blog slug from useParams:", id);
-  const blog = blogs.find((b) => b.slug === id);
-  console.log("Found blog:", blog);
-
+  
+  const [blog, setBlog] = useState(blogs.find((b) => b.slug === id));
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(true);
+  const [loadingBlog, setLoadingBlog] = useState(!blog); // If blog not found in state, we'll fetch it
   const [error, setError] = useState(null);
 
+  // Fetch blog directly from API if not found in state
+  useEffect(() => {
+    if (!blog) {
+      const fetchBlogBySlug = async () => {
+        setLoadingBlog(true);
+        setError(null);
+        try {
+          console.log("Fetching blogs from API to find slug:", id);
+          const response = await fetch('/api/post', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await response.json();
+          if (response.ok && Array.isArray(data)) {
+            const foundBlog = data.find((b) => b.slug === id);
+            if (foundBlog) {
+              setBlog(foundBlog);
+              console.log("Blog found via API:", foundBlog);
+            } else {
+              setError('Blog not found.');
+              console.error('Blog not found for slug:', id);
+            }
+          } else {
+            setError('Failed to load blog.');
+            console.error('Error loading blog:', data.message);
+          }
+        } catch (error) {
+          setError('An error occurred while fetching the blog.');
+          console.error('Error fetching blog:', error);
+        } finally {
+          setLoadingBlog(false);
+        }
+      };
+      fetchBlogBySlug();
+    }
+  }, [id, blog]);
+
+  // Fetch comments
   useEffect(() => {
     const fetchComments = async () => {
       setLoadingComments(true);
@@ -255,7 +293,11 @@ function Blog({ blogs }) {
         </Helmet>
       )}
       <div className="max-w-3xl mx-auto p-4">
-        {blog ? (
+        {loadingBlog ? (
+          <p className="text-center text-gray-500 dark:text-gray-400">Loading blog...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : blog ? (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
             <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">{blog.title}</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{blog.date}</p>
@@ -372,8 +414,11 @@ function App() {
     }
   };
 
+  // Fetch blogs initially and set up interval to fetch every 5 minutes
   useEffect(() => {
-    fetchBlogs();
+    fetchBlogs(); // Initial fetch
+    const interval = setInterval(fetchBlogs, 5 * 60 * 1000); // Fetch every 5 minutes
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   const renderedOutput = (
