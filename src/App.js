@@ -155,9 +155,7 @@ function Blog({ blogs }) {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
           });
-          console.log("API Response Status for Blog fetch:", response.status);
           const data = await response.json();
-          console.log("API Response Data for Blog fetch:", data);
           if (response.ok && Array.isArray(data)) {
             const foundBlog = data.find((b) => b.slug === id);
             if (foundBlog) {
@@ -173,7 +171,7 @@ function Blog({ blogs }) {
           }
         } catch (error) {
           setError('An error occurred while fetching the blog.');
-          console.error('Error fetching blog:', error.message);
+          console.error('Error fetching blog:', error);
         } finally {
           setLoadingBlog(false);
         }
@@ -188,14 +186,11 @@ function Blog({ blogs }) {
       setLoadingComments(true);
       setError(null);
       try {
-        console.log(`Fetching comments for blog_id: ${blog?.id}`);
         const response = await fetch(`/api/post?blogId=${blog?.id}&_=${Date.now()}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-        console.log("API Response Status for Comments fetch:", response.status);
         const data = await response.json();
-        console.log("API Response Data for Comments fetch:", data);
         if (response.ok && Array.isArray(data)) {
           setComments(data);
           console.log('Comments loaded:', data);
@@ -205,7 +200,7 @@ function Blog({ blogs }) {
         }
       } catch (error) {
         setError('An error occurred while fetching comments.');
-        console.error('Error fetching comments:', error.message);
+        console.error('Error fetching comments:', error);
       } finally {
         setLoadingComments(false);
       }
@@ -228,7 +223,6 @@ function Blog({ blogs }) {
           body: JSON.stringify({ blogId: blog.id, comment }),
         });
         const data = await response.json();
-        console.log("Comment Submit Response:", data);
         if (response.ok) {
           setComments((prevComments) => {
             if (prevComments.some(c => c.text === comment.text && c.date === comment.date)) {
@@ -241,7 +235,7 @@ function Blog({ blogs }) {
           console.error('Error saving comment:', data.message);
         }
       } catch (error) {
-        console.error('Error saving comment:', error.message);
+        console.error('Error saving comment:', error);
       }
     }
   };
@@ -412,24 +406,18 @@ function App() {
       console.log("API Response Data:", data);
       
       if (response.ok && Array.isArray(data)) {
-        // Force update the blogs state
-        setBlogs((prevBlogs) => {
-          console.log("Previous blogs state:", prevBlogs);
-          console.log("New blogs data:", data);
-          return [...data]; // Force overwrite with new data
-        });
+        setBlogs(data);
         console.log('Blogs successfully loaded and set in state:', data);
       } else {
-        setError(`Failed to load blogs. Status: ${response.status}, Message: ${data.message || 'Unknown error'}`);
+        setError('Failed to load blogs. Please try again.');
         console.error('Error loading blogs:', data.message || 'Unknown error');
       }
     } catch (error) {
-      setError('An error occurred while fetching blogs: ' + error.message);
+      setError('An error occurred while fetching blogs.');
       console.error('Error fetching blogs:', error.message);
     } finally {
       setLoading(false);
       // Schedule the next fetch after 5 minutes
-      console.log("Scheduling next fetch in 5 minutes...");
       setTimeout(fetchBlogs, 5 * 60 * 1000);
     }
   };
