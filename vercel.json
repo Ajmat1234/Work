@@ -1,5 +1,9 @@
 {
-  "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/sitemap.js" }
+  "redirects": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://auto-generated.onrender.com/sitemap.xml",
+      "permanent": true
+    }
   ]
 }
