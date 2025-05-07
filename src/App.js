@@ -17,14 +17,23 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
-  // Sorting hata diya, direct blogs use karenge
+  // Add reverse order sorting using date and time
+  const sortedBlogs = [...blogs].sort((a, b) => {
+    const dateTimeA = new Date(`${a.date}T${a.time || '00:00:00'}`);
+    const dateTimeB = new Date(`${b.date}T${b.time || '00:00:00'}`);
+    if (isNaN(dateTimeA) || isNaN(dateTimeB)) {
+      return 0; // Fallback to keep order if dates are invalid
+    }
+    return dateTimeB - dateTimeA; // Sort by newest first
+  });
+
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      {blogs && blogs.length > 0 ? (
+      {sortedBlogs && sortedBlogs.length > 0 ? (
         <div className="space-y-6">
-          {blogs.map((blog) => (
+          {sortedBlogs.map((blog) => (
             <div
-              key={blog.id || blog.title} // Fallback to title if id is missing
+              key={blog.id || blog.title}
               className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
               <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
@@ -33,16 +42,16 @@ function Home({ blogs, fetchBlogs }) {
                 </h2>
                 <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
                   {blog.content && blog.content.split('\n').map((line, index) => {
-                    if (line.startsWith('**Question:')) {
+                    if (line.startsWith('Question:')) {
                       return (
                         <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
-                          {line.replace('**Question:', '').replace('**', '').trim()}
+                          {line.replace('Question:', '').trim()}
                         </p>
                       );
-                    } else if (line.startsWith('**Answer')) {
+                    } else if (line.startsWith('Answer')) {
                       return (
                         <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
-                          {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
+                          {line.replace(/Answer \d+:/, '').trim()}
                         </p>
                       );
                     }
@@ -50,7 +59,7 @@ function Home({ blogs, fetchBlogs }) {
                   })}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                  {blog.date || 'No date available'}
+                  {blog.date} {blog.time ? `at ${blog.time}` : ''}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {blog.tags && blog.tags.length > 0 ? (
@@ -174,20 +183,20 @@ function Blog({ blogs }) {
             {blog.title || 'Untitled Post'}
           </h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {blog.date || 'No date available'}
+            {blog.date} {blog.time ? `at ${blog.time}` : ''}
           </p>
           <div className="leading-relaxed text-justify">
             {blog.content && blog.content.split('\n').map((line, index) => {
-              if (line.startsWith('**Question:')) {
+              if (line.startsWith('Question:')) {
                 return (
                   <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
-                    {line.replace('**Question:', '').replace('**', '').trim()}
+                    {line.replace('Question:', '').trim()}
                   </p>
                 );
-              } else if (line.startsWith('**Answer')) {
+              } else if (line.startsWith('Answer')) {
                 return (
                   <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
-                    {line.replace(/^\*\*Answer \d+:\*\*/, '').trim()}
+                    {line.replace(/Answer \d+:/, '').trim()}
                   </p>
                 );
               }
