@@ -4,6 +4,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",
+    "postbuild": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -29,5 +30,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "reactSnap": {
+    "inlineCss": true
   }
 }
