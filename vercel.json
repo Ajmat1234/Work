@@ -1,7 +1,5 @@
 {
-  "functions": {
-    "api/sitemap.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap.js" }
+  ]
 }
