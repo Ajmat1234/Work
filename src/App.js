@@ -17,14 +17,23 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
-  // Add reverse order sorting using date and time
+  // Updated reverse order sorting using date and time
   const sortedBlogs = [...blogs].sort((a, b) => {
-    const dateTimeA = new Date(`${a.date}T${a.time || '00:00:00'}`);
-    const dateTimeB = new Date(`${b.date}T${b.time || '00:00:00'}`);
-    if (isNaN(dateTimeA) || isNaN(dateTimeB)) {
-      return 0; // Fallback to keep order if dates are invalid
+    // Combine date and time, fallback to '00:00:00' if time is missing
+    const dateTimeA = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
+    const dateTimeB = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
+    
+    // Check if dates are valid
+    if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) {
+      return 0; // Both invalid, no change in order
+    } else if (isNaN(dateTimeA.getTime())) {
+      return 1; // A invalid, push it down
+    } else if (isNaN(dateTimeB.getTime())) {
+      return -1; // B invalid, push it down
     }
-    return dateTimeB - dateTimeA; // Sort by newest first
+    
+    // Sort by newest first
+    return dateTimeB.getTime() - dateTimeA.getTime();
   });
 
   const renderedOutput = (
