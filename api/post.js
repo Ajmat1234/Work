@@ -24,16 +24,26 @@ export default async function handler(req, res) {
         res.status(response.status).json(data);
       }
     } else if (req.method === 'GET') {
-      const blogId = req.query.blogId;
-      const url = blogId 
-        ? `https://auto-generated.onrender.com/api/post?blogId=${blogId}` 
-        : 'https://auto-generated.onrender.com/api/post';
+      const { blogId, slug } = req.query;
+      let url;
+      if (slug) {
+        url = 'https://auto-generated.onrender.com/api/post';
+      } else if (blogId) {
+        url = `https://auto-generated.onrender.com/api/post?blogId=${blogId}`;
+      } else {
+        url = 'https://auto-generated.onrender.com/api/post';
+      }
 
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
-      const data = await response.json();
+      let data = await response.json();
+
+      if (response.ok && slug) {
+        // Filter by slug if provided
+        data = Array.isArray(data) ? data.find(blog => blog.slug === slug) || [] : [];
+      }
 
       if (response.ok) {
         res.status(200).json(data);
