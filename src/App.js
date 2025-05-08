@@ -4,7 +4,7 @@ import { Routes, Route, Link, useParams } from 'react-router-dom';
 function Home({ blogs, fetchBlogs }) {
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
-    const shareUrl = window.location.origin + `/blog/${blog.id}`;
+    const shareUrl = window.location.origin + `/blog/${blog.slug}`;
     if (navigator.share) {
       navigator.share({
         title: blog.title,
@@ -17,22 +17,16 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
-  // Updated reverse order sorting using date and time
   const sortedBlogs = [...blogs].sort((a, b) => {
-    // Combine date and time, fallback to '00:00:00' if time is missing
     const dateTimeA = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
     const dateTimeB = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
-    
-    // Check if dates are valid
     if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) {
-      return 0; // Both invalid, no change in order
+      return 0;
     } else if (isNaN(dateTimeA.getTime())) {
-      return 1; // A invalid, push it down
+      return 1;
     } else if (isNaN(dateTimeB.getTime())) {
-      return -1; // B invalid, push it down
+      return -1;
     }
-    
-    // Sort by newest first
     return dateTimeB.getTime() - dateTimeA.getTime();
   });
 
@@ -45,7 +39,7 @@ function Home({ blogs, fetchBlogs }) {
               key={blog.id || blog.title}
               className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
-              <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:text-blue-800">
+              <Link to={`/blog/${blog.slug}`} className="text-blue-600 hover:text-blue-800">
                 <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">
                   {blog.title || 'Untitled Post'}
                 </h2>
@@ -86,7 +80,7 @@ function Home({ blogs, fetchBlogs }) {
                 </div>
               </Link>
               <div className="mt-3 flex justify-between">
-                <Link to={`/blog/${blog.id}`} className="text-blue-600 hover:underline text-sm">
+                <Link to={`/blog/${blog.slug}`} className="text-blue-600 hover:underline text-sm">
                   Read More
                 </Link>
                 <button
@@ -109,8 +103,8 @@ function Home({ blogs, fetchBlogs }) {
 }
 
 function Blog({ blogs }) {
-  const { id } = useParams();
-  const blog = blogs.find((b) => Number(b.id) === Number(id));
+  const { slug } = useParams();
+  const blog = blogs.find((b) => b.slug === slug);
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -122,7 +116,7 @@ function Blog({ blogs }) {
       setLoadingComments(true);
       setError(null);
       try {
-        const response = await fetch(`/api/post?blogId=${id}`, {
+        const response = await fetch(`/api/post?blogId=${blog?.id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -139,19 +133,21 @@ function Blog({ blogs }) {
       }
     };
 
-    fetchComments();
-  }, [id]);
+    if (blog?.id) {
+      fetchComments();
+    }
+  }, [blog?.id]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (newComment.trim()) {
+    if (newComment.trim() && blog?.id) {
       const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
       
       try {
         const response = await fetch('/api/post', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ blogId: id, comment }),
+          body: JSON.stringify({ blogId: blog.id, comment }),
         });
         const data = await response.json();
         if (response.ok) {
@@ -170,6 +166,7 @@ function Blog({ blogs }) {
   };
 
   const sharePost = () => {
+    if (!blog) return;
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
     const shareUrl = window.location.href;
     if (navigator.share) {
@@ -313,10 +310,8 @@ function App() {
   const renderedOutput = (
     <div className={theme === 'dark' ? 'dark' : ''}>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        {/* Combined Navigation and Latest Blogs/Refresh Blogs Section */}
         <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
-            {/* Navigation Bar */}
             <div className="flex justify-between items-center">
               <Link to="/" className="text-lg font-bold text-blue-600 dark:text-blue-400">
                 Ajmat's Blog
@@ -333,7 +328,6 @@ function App() {
                 </button>
               </div>
             </div>
-            {/* Latest Blogs and Refresh Blogs */}
             <div className="flex justify-between items-center">
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">Latest Blogs</h1>
               <button
@@ -363,7 +357,7 @@ function App() {
         ) : (
           <Routes>
             <Route path="/" element={<Home blogs={blogs} fetchBlogs={fetchBlogs} />} />
-            <Route path="/blog/:id" element={<Blog blogs={blogs} />} />
+            <Route path="/blog/:slug" element={<Blog blogs={blogs} />} />
           </Routes>
         )}
       </div>
