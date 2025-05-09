@@ -62,7 +62,7 @@ function ContactUs() {
   );
 }
 
-// Home Component with Search Filtering
+// Home Component with Search Filtering and Internal Links
 function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
@@ -99,6 +99,14 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
     }
     return dateTimeB.getTime() - dateTimeA.getTime();
   });
+
+  // Function to get random related posts (excluding the current post)
+  const getRelatedPosts = (currentBlog) => {
+    const otherBlogs = blogs.filter((blog) => blog.slug !== currentBlog.slug);
+    if (otherBlogs.length <= 3) return otherBlogs; // If 3 or fewer other posts, return all
+    const shuffled = otherBlogs.sort(() => 0.5 - Math.random()); // Shuffle array
+    return shuffled.slice(0, 3); // Return up to 3 random posts
+  };
 
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
@@ -159,6 +167,25 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
                 >
                   Share
                 </button>
+              </div>
+              {/* Related Posts Section */}
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-300">Read More Posts:</h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {getRelatedPosts(blog).length > 0 ? (
+                    getRelatedPosts(blog).map((relatedBlog) => (
+                      <Link
+                        key={relatedBlog.id || relatedBlog.title}
+                        to={`/blog/${relatedBlog.slug}`}
+                        className="text-blue-400 hover:underline text-sm"
+                      >
+                        {relatedBlog.title || 'Untitled Post'}
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-400">No other posts available.</p>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -351,7 +378,6 @@ function App() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [theme, setTheme] = useState('dark'); // Default to dark theme
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [scrollDirection, setScrollDirection] = useState('down');
 
@@ -384,10 +410,6 @@ function App() {
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
     if (showSearch) setSearchQuery(''); // Clear search when closing
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   // Scroll Button Logic
@@ -432,21 +454,21 @@ function App() {
   };
 
   const renderedOutput = (
-    <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-900 dark:bg-gray-900 text-white dark:text-white">
-        <div className="sticky top-0 z-10 bg-gray-800 dark:bg-gray-800 shadow-lg p-4">
+    <div>
+      <div className="min-h-screen bg-gray-900 text-white">
+        <div className="sticky top-0 z-10 bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link to="/" className="text-lg font-bold text-blue-400 dark:text-blue-400">
+              <Link to="/" className="text-lg font-bold text-blue-400">
                 Ajmat's Blog
               </Link>
               <div className="flex items-center space-x-4">
-                <Link to="/" className="text-sm hover:text-blue-400 dark:hover:text-blue-400">
+                <Link to="/" className="text-sm hover:text-blue-400">
                   Home
                 </Link>
                 <button
                   onClick={handleSearchToggle}
-                  className="p-1 rounded-full bg-gray-700 dark:bg-gray-700 hover:bg-gray-600 transition-all"
+                  className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 transition-all"
                 >
                   🔍
                 </button>
@@ -459,12 +481,12 @@ function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search blogs..."
-                  className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 dark:bg-gray-700 text-white dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
             )}
             <div className="flex justify-between items-center">
-              <h1 className="text-xl font-bold text-white dark:text-white">Latest Blogs</h1>
+              <h1 className="text-xl font-bold text-white">Latest Blogs</h1>
               <button
                 onClick={fetchBlogs}
                 className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-xs"
@@ -477,11 +499,11 @@ function App() {
 
         {loading ? (
           <div className="text-center mt-8">
-            <p className="text-gray-400 dark:text-gray-400">Loading blogs...</p>
+            <p className="text-gray-400">Loading blogs...</p>
           </div>
         ) : error ? (
           <div className="text-center mt-8">
-            <p className="text-red-400 dark:text-red-400">{error}</p>
+            <p className="text-red-400">{error}</p>
             <button
               onClick={fetchBlogs}
               className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
@@ -504,32 +526,24 @@ function App() {
         )}
 
         {/* Footer */}
-        <footer className="bg-gray-800 dark:bg-gray-800 text-gray-300 dark:text-gray-300 p-4 mt-8 relative">
+        <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm">© 2025 Ajmat's Blog. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/about" className="text-sm hover:text-blue-400 dark:hover:text-blue-400">
+              <Link to="/about" className="text-sm hover:text-blue-400">
                 About Us
               </Link>
-              <Link to="/privacy" className="text-sm hover:text-blue-400 dark:hover:text-blue-400">
+              <Link to="/privacy" className="text-sm hover:text-blue-400">
                 Privacy Policy
               </Link>
-              <Link to="/disclaimer" className="text-sm hover:text-blue-400 dark:hover:text-blue-400">
+              <Link to="/disclaimer" className="text-sm hover:text-blue-400">
                 Disclaimer
               </Link>
-              <Link to="/contact" className="text-sm hover:text-blue-400 dark:hover:text-blue-400">
+              <Link to="/contact" className="text-sm hover:text-blue-400">
                 Contact Us
               </Link>
             </div>
           </div>
-          {/* Theme Toggle Button - Fixed Position */}
-          <button
-            onClick={toggleTheme}
-            className="fixed bottom-16 right-4 p-3 rounded-full bg-gray-700 dark:bg-gray-700 hover:bg-gray-600 text-white dark:text-white shadow-lg transition-all"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
         </footer>
 
         {/* Scroll Button - Fixed Position */}
