@@ -553,7 +553,7 @@ function App() {
             className="fixed bottom-4 right-4 p-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-all"
             title={scrollDirection === 'down' ? 'Scroll to Bottom' : 'Scroll to Top'}
           >
-            {scrollDirection === 'down' ? '⬇️' : '⬆️'}
+            {scrollDirection === 'down' ? '⇓' : '⇑'}
           </button>
         )}
       </div>
