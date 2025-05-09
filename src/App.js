@@ -459,9 +459,8 @@ function App() {
         <div className="sticky top-0 z-10 bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link to="/" className="flex items-center space-x-2">
-                <img src="/logo.png" alt="Knowtivus Logo" className="h-8 w-auto" />
-                <span className="text-lg font-bold text-blue-400">Knowtivus</span>
+              <Link to="/">
+                <img src="/logo.png" alt="Knowtivus Logo" className="h-12 w-auto" />
               </Link>
               <div className="flex items-center space-x-4">
                 <Link to="/" className="text-sm hover:text-blue-400">
