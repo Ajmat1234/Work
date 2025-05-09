@@ -1,7 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useParams } from 'react-router-dom';
 
-function Home({ blogs, fetchBlogs }) {
+// About Us Component
+function AboutUs() {
+  return (
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-purple-600 mb-2">About Us</h1>
+      <p className="text-gray-700 leading-relaxed text-justify">
+        Welcome to Ajmat’s Blog! <br />
+        I'm Ajmat from Jharkhand, India. <br /><br />
+        This website is my personal project where I share informational blogs to help students, curious readers, and professionals. I use modern AI tools to assist in creating content, but I personally check and publish each blog to make sure it's helpful and meaningful. <br /><br />
+        I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments — so I can correct it and we can learn together.
+      </p>
+    </div>
+  );
+}
+
+// Privacy Policy Component
+function PrivacyPolicy() {
+  return (
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-purple-600 mb-2">Privacy Policy</h1>
+      <p className="text-gray-700 leading-relaxed text-justify">
+        At Ajmat's Blog, your privacy is extremely important. <br /><br />
+        This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous — I do not know who visits my site, and no data about you is saved on my end. <br /><br />
+        I do not use any public or private user data. I also do not use cookies or third-party tracking tools. <br /><br />
+        The only interaction is through comments — and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
+        There is absolutely no risk to your privacy when using this website.
+      </p>
+    </div>
+  );
+}
+
+// Disclaimer Component
+function Disclaimer() {
+  return (
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-purple-600 mb-2">Disclaimer</h1>
+      <p className="text-gray-700 leading-relaxed text-justify">
+        All the content provided on Ajmat’s Blog is for informational and educational purposes only. <br /><br />
+        While I try my best to share accurate and useful content, there may be occasional mistakes. I encourage all readers to do their own research before taking any action based on the content provided. <br /><br />
+        I am not responsible for any kind of loss or damage caused by the information shared here. Your understanding, feedback, and suggestions are always welcome through the comment section. <br /><br />
+        If you find any errors or misleading details, please let me know in the comments — I will gladly correct them. Learning is a journey, and I believe in growing together.
+      </p>
+    </div>
+  );
+}
+
+// Contact Us Component
+function ContactUs() {
+  return (
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-purple-600 mb-2">Contact Us</h1>
+      <p className="text-gray-700 leading-relaxed text-justify">
+        If you have any questions, feedback, or suggestions, feel free to reach out to me. <br /><br />
+        Name: Ajmat <br />
+        Email: <a href="mailto:hunterboyz73770@gmail.com" className="text-blue-600 hover:underline">hunterboyz73770@gmail.com</a> <br /><br />
+        I read every email and try my best to respond as soon as possible. Thank you for visiting my blog!
+      </p>
+    </div>
+  );
+}
+
+// Home Component with Search Filtering
+function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
     const shareUrl = window.location.origin + `/blog/${blog.slug}`;
@@ -17,7 +79,15 @@ function Home({ blogs, fetchBlogs }) {
     }
   };
 
-  const sortedBlogs = [...blogs].sort((a, b) => {
+  const filteredBlogs = searchQuery
+    ? blogs.filter((blog) =>
+        (blog.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         blog.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         blog.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+      )
+    : blogs;
+
+  const sortedBlogs = [...filteredBlogs].sort((a, b) => {
     const dateTimeA = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
     const dateTimeB = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
     if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) {
@@ -37,23 +107,23 @@ function Home({ blogs, fetchBlogs }) {
           {sortedBlogs.map((blog) => (
             <div
               key={blog.id || blog.title}
-              className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+              className="bg-white p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
               <Link to={`/blog/${blog.slug}`} className="text-blue-600 hover:text-blue-800">
-                <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">
+                <h2 className="text-lg font-semibold text-purple-600 mb-2">
                   {blog.title || 'Untitled Post'}
                 </h2>
-                <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
+                <div className="text-gray-700 leading-relaxed text-justify">
                   {blog.content && blog.content.split('\n').map((line, index) => {
                     if (line.startsWith('Question:')) {
                       return (
-                        <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
+                        <p key={index} className="text-base font-semibold text-pink-600">
                           {line.replace('Question:', '').trim()}
                         </p>
                       );
                     } else if (line.startsWith('Answer')) {
                       return (
-                        <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                        <p key={index} className="text-gray-700 mt-2">
                           {line.replace(/Answer \d+:/, '').trim()}
                         </p>
                       );
@@ -61,7 +131,7 @@ function Home({ blogs, fetchBlogs }) {
                     return null;
                   })}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                <p className="text-xs text-gray-500 mt-3">
                   {blog.date} {blog.time ? `at ${blog.time}` : ''}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -94,7 +164,9 @@ function Home({ blogs, fetchBlogs }) {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500 dark:text-gray-400">No blogs available.</p>
+        <p className="text-center text-gray-500">
+          {searchQuery ? 'No blogs match your search.' : 'No blogs available.'}
+        </p>
       )}
     </div>
   );
@@ -102,6 +174,7 @@ function Home({ blogs, fetchBlogs }) {
   return renderedOutput;
 }
 
+// Blog Component (unchanged)
 function Blog({ blogs }) {
   const { slug } = useParams();
   const blog = blogs.find((b) => b.slug === slug);
@@ -184,24 +257,24 @@ function Blog({ blogs }) {
   const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
       {blog ? (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-purple-600 mb-2">
             {blog.title || 'Untitled Post'}
           </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {blog.date} {blog.time ? `at ${blog.time}` : ''}
           </p>
           <div className="leading-relaxed text-justify">
             {blog.content && blog.content.split('\n').map((line, index) => {
               if (line.startsWith('Question:')) {
                 return (
-                  <p key={index} className="text-base font-semibold text-pink-600 dark:text-pink-400">
+                  <p key={index} className="text-base font-semibold text-pink-600">
                     {line.replace('Question:', '').trim()}
                   </p>
                 );
               } else if (line.startsWith('Answer')) {
                 return (
-                  <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">
+                  <p key={index} className="text-gray-700 mt-2">
                     {line.replace(/Answer \d+:/, '').trim()}
                   </p>
                 );
@@ -230,26 +303,26 @@ function Blog({ blogs }) {
             Share
           </button>
           <div className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Comments</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Comments</h3>
             {loadingComments ? (
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Loading comments...</p>
+              <p className="text-gray-500 mt-2">Loading comments...</p>
             ) : error ? (
               <p className="text-red-500 mt-2">{error}</p>
             ) : comments.length > 0 ? (
               comments.map((comment, index) => (
-                <div key={index} className="mt-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300">{comment.text}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{comment.date}</p>
+                <div key={index} className="mt-3 p-3 bg-gray-100 rounded-lg">
+                  <p className="text-gray-700">{comment.text}</p>
+                  <p className="text-xs text-gray-500">{comment.date}</p>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 mt-2">No comments yet. Be the first to comment!</p>
+              <p className="text-gray-500 mt-2">No comments yet. Be the first to comment!</p>
             )}
             <form onSubmit={handleCommentSubmit} className="mt-4">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 dark:text-gray-900"
+                className="w-full p-3 border rounded-lg text-gray-900"
                 placeholder="Add a comment..."
                 rows="3"
               />
@@ -263,7 +336,7 @@ function Blog({ blogs }) {
           </div>
         </div>
       ) : (
-        <p className="text-center text-gray-500 dark:text-gray-400">Blog not found!</p>
+        <p className="text-center text-gray-500">Blog not found!</p>
       )}
     </div>
   );
@@ -271,15 +344,13 @@ function Blog({ blogs }) {
   return renderedOutput;
 }
 
+// Main App Component
 function App() {
-  const [theme, setTheme] = useState('light');
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const fetchBlogs = async () => {
     setLoading(true);
@@ -307,29 +378,45 @@ function App() {
     fetchBlogs();
   }, []);
 
+  const handleSearchToggle = () => {
+    setShowSearch(!showSearch);
+    if (showSearch) setSearchQuery(''); // Clear search when closing
+  };
+
   const renderedOutput = (
-    <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-lg p-4">
+    <div>
+      <div className="min-h-screen bg-gray-100 text-gray-900">
+        <div className="sticky top-0 z-10 bg-white shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link to="/" className="text-lg font-bold text-blue-600 dark:text-blue-400">
+              <Link to="/" className="text-lg font-bold text-blue-600">
                 Ajmat's Blog
               </Link>
               <div className="flex items-center space-x-4">
-                <Link to="/" className="text-sm hover:text-blue-600 dark:hover:text-blue-400">
+                <Link to="/" className="text-sm hover:text-blue-600">
                   Home
                 </Link>
                 <button
-                  onClick={toggleTheme}
-                  className="p-1 rounded-full bg-gray-200 dark:bg-gray-700"
+                  onClick={handleSearchToggle}
+                  className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition-all"
                 >
-                  {theme === 'light' ? '🌙' : '☀️'}
+                  🔍
                 </button>
               </div>
             </div>
+            {showSearch && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search blogs..."
+                  className="w-full p-2 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+            )}
             <div className="flex justify-between items-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Latest Blogs</h1>
+              <h1 className="text-xl font-bold text-gray-900">Latest Blogs</h1>
               <button
                 onClick={fetchBlogs}
                 className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
@@ -342,7 +429,7 @@ function App() {
 
         {loading ? (
           <div className="text-center mt-8">
-            <p className="text-gray-500 dark:text-gray-400">Loading blogs...</p>
+            <p className="text-gray-500">Loading blogs...</p>
           </div>
         ) : error ? (
           <div className="text-center mt-8">
@@ -356,10 +443,38 @@ function App() {
           </div>
         ) : (
           <Routes>
-            <Route path="/" element={<Home blogs={blogs} fetchBlogs={fetchBlogs} />} />
+            <Route
+              path="/"
+              element={<Home blogs={blogs} fetchBlogs={fetchBlogs} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
+            />
             <Route path="/blog/:slug" element={<Blog blogs={blogs} />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/contact" element={<ContactUs />} />
           </Routes>
         )}
+
+        {/* Footer */}
+        <footer className="bg-gray-200 text-gray-700 p-4 mt-8">
+          <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm">© 2025 Ajmat's Blog. All rights reserved.</p>
+            <div className="flex flex-wrap gap-4">
+              <Link to="/about" className="text-sm hover:text-blue-600">
+                About Us
+              </Link>
+              <Link to="/privacy" className="text-sm hover:text-blue-600">
+                Privacy Policy
+              </Link>
+              <Link to="/disclaimer" className="text-sm hover:text-blue-600">
+                Disclaimer
+              </Link>
+              <Link to="/contact" className="text-sm hover:text-blue-600">
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
