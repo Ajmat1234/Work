@@ -7,7 +7,7 @@ function AboutUs() {
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-bold text-purple-400 mb-2">About Us</h1>
       <p className="text-gray-300 leading-relaxed text-justify">
-        Welcome to Ajmat’s Blog! <br />
+        Welcome to Knowtivus! <br />
         I'm Ajmat from Jharkhand, India. <br /><br />
         This website is my personal project where I share informational blogs to help students, curious readers, and professionals. I use modern AI tools to assist in creating content, but I personally check and publish each blog to make sure it's helpful and meaningful. <br /><br />
         I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments — so I can correct it and we can learn together.
@@ -22,7 +22,7 @@ function PrivacyPolicy() {
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-bold text-purple-400 mb-2">Privacy Policy</h1>
       <p className="text-gray-300 leading-relaxed text-justify">
-        At Ajmat's Blog, your privacy is extremely important. <br /><br />
+        At Knowtivus, your privacy is extremely important. <br /><br />
         This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous — I do not know who visits my site, and no data about you is saved on my end. <br /><br />
         I do not use any public or private user data. I also do not use cookies or third-party tracking tools. <br /><br />
         The only interaction is through comments — and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
@@ -38,7 +38,7 @@ function Disclaimer() {
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-bold text-purple-400 mb-2">Disclaimer</h1>
       <p className="text-gray-300 leading-relaxed text-justify">
-        All the content provided on Ajmat’s Blog is for informational and educational purposes only. <br /><br />
+        All the content provided on Knowtivus is for informational and educational purposes only. <br /><br />
         While I try my best to share accurate and useful content, there may be occasional mistakes. I encourage all readers to do their own research before taking any action based on the content provided. <br /><br />
         I am not responsible for any kind of loss or damage caused by the information shared here. Your understanding, feedback, and suggestions are always welcome through the comment section. <br /><br />
         If you find any errors or misleading details, please let me know in the comments — I will gladly correct them. Learning is a journey, and I believe in growing together.
@@ -56,7 +56,7 @@ function ContactUs() {
         If you have any questions, feedback, or suggestions, feel free to reach out to me. <br /><br />
         Name: Ajmat <br />
         Email: <a href="mailto:hunterboyz73770@gmail.com" className="text-blue-400 hover:underline">hunterboyz73770@gmail.com</a> <br /><br />
-        I read every email and try my best to respond as soon as possible. Thank you for visiting my blog!
+        I read every email and try my best to respond as soon as possible. Thank you for visiting Knowtivus!
       </p>
     </div>
   );
@@ -65,7 +65,7 @@ function ContactUs() {
 // Home Component with Search Filtering and Internal Links
 function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
   const sharePost = (blog) => {
-    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Knowtivus!`;
     const shareUrl = window.location.origin + `/blog/${blog.slug}`;
     if (navigator.share) {
       navigator.share({
@@ -267,7 +267,7 @@ function Blog({ blogs }) {
 
   const sharePost = () => {
     if (!blog) return;
-    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Ajmat's Blog!`;
+    const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Knowtivus!`;
     const shareUrl = window.location.href;
     if (navigator.share) {
       navigator.share({
@@ -459,8 +459,9 @@ function App() {
         <div className="sticky top-0 z-10 bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link to="/" className="text-lg font-bold text-blue-400">
-                Ajmat's Blog
+              <Link to="/" className="flex items-center space-x-2">
+                <img src="/logo.png" alt="Knowtivus Logo" className="h-8 w-auto" />
+                <span className="text-lg font-bold text-blue-400">Knowtivus</span>
               </Link>
               <div className="flex items-center space-x-4">
                 <Link to="/" className="text-sm hover:text-blue-400">
@@ -528,7 +529,7 @@ function App() {
         {/* Footer */}
         <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm">© 2025 Ajmat's Blog. All rights reserved.</p>
+            <p className="text-sm">© 2025 Knowtivus. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
               <Link to="/about" className="text-sm hover:text-blue-400">
                 About Us
