@@ -10,7 +10,7 @@ function AboutUs() {
         Welcome to Knowtivus! <br />
         I'm Ajmat from Jharkhand, India. <br /><br />
         This website is my personal project where I share informational blogs to help students, curious readers, and professionals. I use modern AI tools to assist in creating content, but I personally check and publish each blog to make sure it's helpful and meaningful. <br /><br />
-        I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments â€” so I can correct it and we can learn together.
+        I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments — so I can correct it and we can learn together.
       </p>
     </div>
   );
@@ -23,9 +23,9 @@ function PrivacyPolicy() {
       <h1 className="text-2xl font-bold text-purple-400 mb-2">Privacy Policy</h1>
       <p className="text-gray-300 leading-relaxed text-justify">
         At Knowtivus, your privacy is extremely important. <br /><br />
-        This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous â€” I do not know who visits my site, and no data about you is saved on my end. <br /><br />
+        This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous — I do not know who visits my site, and no data about you is saved on my end. <br /><br />
         I do not use any public or private user data. I also do not use cookies or third-party tracking tools. <br /><br />
-        The only interaction is through comments â€” and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
+        The only interaction is through comments — and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
         There is absolutely no risk to your privacy when using this website.
       </p>
     </div>
@@ -41,7 +41,7 @@ function Disclaimer() {
         All the content provided on Knowtivus is for informational and educational purposes only. <br /><br />
         While I try my best to share accurate and useful content, there may be occasional mistakes. I encourage all readers to do their own research before taking any action based on the content provided. <br /><br />
         I am not responsible for any kind of loss or damage caused by the information shared here. Your understanding, feedback, and suggestions are always welcome through the comment section. <br /><br />
-        If you find any errors or misleading details, please let me know in the comments â€” I will gladly correct them. Learning is a journey, and I believe in growing together.
+        If you find any errors or misleading details, please let me know in the comments — I will gladly correct them. Learning is a journey, and I believe in growing together.
       </p>
     </div>
   );
@@ -470,7 +470,7 @@ function App() {
                   onClick={handleSearchToggle}
                   className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 transition-all"
                 >
-                  ðŸ”
+                  🔍
                 </button>
               </div>
             </div>
@@ -528,7 +528,7 @@ function App() {
         {/* Footer */}
         <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm">Â© 2025 Knowtivus. All rights reserved.</p>
+            <p className="text-sm">© 2025 Knowtivus. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
               <Link to="/about" className="text-sm hover:text-blue-400">
                 About Us
@@ -553,7 +553,7 @@ function App() {
             className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white shadow-lg transition-all"
             title={scrollDirection === 'down' ? 'Scroll to Bottom' : 'Scroll to Top'}
           >
-            {scrollDirection === 'down' ? 'â‡“' : 'â‡‘'}
+            {scrollDirection === 'down' ? '⇓' : '⇑'}
           </button>
         )}
       </div>
