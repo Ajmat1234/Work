@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest" // Optional: Agar aap testing ke liye Jest use karna chahte hain
+    "test": "jest"
   },
   "dependencies": {
     "next": "^14.2.3",
@@ -14,7 +14,7 @@
     "axios": "^1.7.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0" // Optional: Testing ke liye
+    "jest": "^29.7.0" 
   },
   "browserslist": {
     "production": [
