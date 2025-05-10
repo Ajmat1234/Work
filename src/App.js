@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 
 // About Us Component
 function AboutUs() {
@@ -64,7 +65,10 @@ function ContactUs() {
 }
 
 // Home Component
-function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
+function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage }) {
+  const router = useRouter();
+  const totalPages = Math.ceil(totalBlogs / blogsPerPage);
+
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Knowtivus!`;
     const shareUrl = window.location.origin + `/blog/${blog.slug}`;
@@ -108,8 +112,19 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
     return shuffled.slice(0, 3);
   };
 
+  const handlePageChange = (newPage) => {
+    router.push(`/?page=${newPage}`);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4">
+      <Head>
+        <title>{`Knowtivus - Latest Blogs | Page ${currentPage}`}</title>
+        <meta name="description" content="Explore the latest educational and informational blogs on Knowtivus. Topics include technology, history, science, and more." />
+        <meta name="keywords" content="blogs, education, knowledge, technology, history, science" />
+        <meta name="robots" content="index, follow" />
+      </Head>
+
       {sortedBlogs && sortedBlogs.length > 0 ? (
         <div className="space-y-6">
           {sortedBlogs.map((blog) => (
@@ -117,7 +132,7 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
               key={blog.id || blog.title}
               className="bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
-              <Link href={`/blog/${blog.slug}`}>
+              <Link href={`/blog/${blog.slug}`} prefetch={true}>
                 <a className="text-blue-400 hover:text-blue-300">
                   <h2 className="text-lg font-semibold text-purple-400 mb-2">
                     {blog.title || 'Untitled Post'}
@@ -160,7 +175,7 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
                 </a>
               </Link>
               <div className="mt-3 flex justify-between">
-                <Link href={`/blog/${blog.slug}`}>
+                <Link href={`/blog/${blog.slug}`} prefetch={true}>
                   <a className="text-blue-400 hover:underline text-sm">Read More</a>
                 </Link>
                 <button
@@ -178,6 +193,7 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
                       <Link
                         key={relatedBlog.id || relatedBlog.title}
                         href={`/blog/${relatedBlog.slug}`}
+                        prefetch={true}
                       >
                         <a className="text-blue-400 hover:underline text-sm">
                           {relatedBlog.title || 'Untitled Post'}
@@ -196,6 +212,37 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
         <p className="text-center text-gray-400">
           {searchQuery ? 'No blogs match your search.' : 'No blogs available.'}
         </p>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center items-center gap-4">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-lg text-sm ${
+              currentPage === 1
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-500'
+            }`}
+          >
+            Previous
+          </button>
+          <span className="text-gray-300">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-lg text-sm ${
+              currentPage === totalPages
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-500'
+            }`}
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   );
@@ -368,7 +415,7 @@ function Blog({ blogs, slug }) {
 }
 
 // Main App Component
-export default function App({ initialBlogs, slug }) {
+export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 0, blogsPerPage = 100 }) {
   const router = useRouter();
   const [blogs, setBlogs] = useState(initialBlogs || []);
   const [loading, setLoading] = useState(true);
@@ -378,18 +425,19 @@ export default function App({ initialBlogs, slug }) {
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [scrollDirection, setScrollDirection] = useState('down');
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (page = 1) => {
     setLoading(true);
     setError(null);
+    const limit = blogsPerPage;
+    const offset = (page - 1) * limit;
     try {
-      const response = await fetch('/api/post', {
+      const response = await fetch(`/api/post?limit=${limit}&offset=${offset}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
-        setBlogs([]); // State reset to ensure fresh data
-        setBlogs(data); // Update with new data
+        setBlogs(data);
       } else {
         setError('Failed to load blogs. Please try again.');
       }
@@ -402,11 +450,11 @@ export default function App({ initialBlogs, slug }) {
 
   useEffect(() => {
     if (!initialBlogs || initialBlogs.length === 0) {
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } else {
       setLoading(false);
     }
-  }, [initialBlogs]);
+  }, [initialBlogs, currentPage]);
 
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
@@ -456,13 +504,53 @@ export default function App({ initialBlogs, slug }) {
   const currentPath = router.pathname;
 
   if (currentPath === '/about') {
-    content = <AboutUs />;
+    content = (
+      <>
+        <Head>
+          <title>About Us | Knowtivus</title>
+          <meta name="description" content="Learn more about Knowtivus and its mission to share knowledge freely." />
+          <meta name="keywords" content="about us, knowtivus, knowledge sharing" />
+          <meta name="robots" content="index, follow" />
+        </Head>
+        <AboutUs />
+      </>
+    );
   } else if (currentPath === '/privacy') {
-    content = <PrivacyPolicy />;
+    content = (
+      <>
+        <Head>
+          <title>Privacy Policy | Knowtivus</title>
+          <meta name="description" content="Read the privacy policy of Knowtivus. Your privacy is our priority." />
+          <meta name="keywords" content="privacy policy, knowtivus, data privacy" />
+          <meta name="robots" content="index, follow" />
+        </Head>
+        <PrivacyPolicy />
+      </>
+    );
   } else if (currentPath === '/disclaimer') {
-    content = <Disclaimer />;
+    content = (
+      <>
+        <Head>
+          <title>Disclaimer | Knowtivus</title>
+          <meta name="description" content="Read the disclaimer for the content provided on Knowtivus." />
+          <meta name="keywords" content="disclaimer, knowtivus, educational content" />
+          <meta name="robots" content="index, follow" />
+        </Head>
+        <Disclaimer />
+      </>
+    );
   } else if (currentPath === '/contact') {
-    content = <ContactUs />;
+    content = (
+      <>
+        <Head>
+          <title>Contact Us | Knowtivus</title>
+          <meta name="description" content="Get in touch with Knowtivus for feedback and suggestions." />
+          <meta name="keywords" content="contact us, knowtivus, feedback" />
+          <meta name="robots" content="index, follow" />
+        </Head>
+        <ContactUs />
+      </>
+    );
   } else if (currentPath.startsWith('/blog/') && slug) {
     content = <Blog blogs={blogs} slug={slug} />;
   } else {
@@ -472,6 +560,9 @@ export default function App({ initialBlogs, slug }) {
         fetchBlogs={fetchBlogs}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        currentPage={currentPage}
+        totalBlogs={totalBlogs}
+        blogsPerPage={blogsPerPage}
       />
     );
   }
@@ -513,7 +604,7 @@ export default function App({ initialBlogs, slug }) {
             <div className="flex justify-between items-center">
               <h1 className="text-xl font-bold text-white">Latest Blogs</h1>
               <button
-                onClick={fetchBlogs}
+                onClick={() => fetchBlogs(currentPage)}
                 className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-xs"
               >
                 Refresh Blogs
@@ -530,7 +621,7 @@ export default function App({ initialBlogs, slug }) {
           <div className="text-center mt-8">
             <p className="text-red-400">{error}</p>
             <button
-              onClick={fetchBlogs}
+              onClick={() => fetchBlogs(currentPage)}
               className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
             >
               Retry
@@ -563,7 +654,7 @@ export default function App({ initialBlogs, slug }) {
         {showScrollButton && (
           <button
             onClick={handleScrollClick}
-            className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white shadow-lg transition-all"
+            className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-500 hover:bg-gray-400 text-white shadow-lg transition-all"
             title={scrollDirection === 'down' ? 'Scroll to Bottom' : 'Scroll to Top'}
           >
             {scrollDirection === 'down' ? '⇓' : '⇑'}
