@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 // About Us Component
 function AboutUs() {
@@ -62,7 +63,7 @@ function ContactUs() {
   );
 }
 
-// Home Component with Search Filtering and Internal Links
+// Home Component
 function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Knowtivus!`;
@@ -100,15 +101,14 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
     return dateTimeB.getTime() - dateTimeA.getTime();
   });
 
-  // Function to get random related posts (excluding the current post)
   const getRelatedPosts = (currentBlog) => {
     const otherBlogs = blogs.filter((blog) => blog.slug !== currentBlog.slug);
-    if (otherBlogs.length <= 3) return otherBlogs; // If 3 or fewer other posts, return all
-    const shuffled = otherBlogs.sort(() => 0.5 - Math.random()); // Shuffle array
-    return shuffled.slice(0, 3); // Return up to 3 random posts
+    if (otherBlogs.length <= 3) return otherBlogs;
+    const shuffled = otherBlogs.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
   };
 
-  const renderedOutput = (
+  return (
     <div className="max-w-3xl mx-auto p-4">
       {sortedBlogs && sortedBlogs.length > 0 ? (
         <div className="space-y-6">
@@ -117,49 +117,51 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
               key={blog.id || blog.title}
               className="bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
-              <Link to={`/blog/${blog.slug}`} className="text-blue-400 hover:text-blue-300">
-                <h2 className="text-lg font-semibold text-purple-400 mb-2">
-                  {blog.title || 'Untitled Post'}
-                </h2>
-                <div className="text-gray-300 leading-relaxed text-justify">
-                  {blog.content && blog.content.split('\n').map((line, index) => {
-                    if (line.startsWith('Question:')) {
-                      return (
-                        <p key={index} className="text-base font-semibold text-pink-400">
-                          {line.replace('Question:', '').trim()}
-                        </p>
-                      );
-                    } else if (line.startsWith('Answer')) {
-                      return (
-                        <p key={index} className="text-gray-300 mt-2">
-                          {line.replace(/Answer \d+:/, '').trim()}
-                        </p>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-                <p className="text-xs text-gray-400 mt-3">
-                  {blog.date} {blog.time ? `at ${blog.time}` : ''}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {blog.tags && blog.tags.length > 0 ? (
-                    blog.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-gray-400">No tags</span>
-                  )}
-                </div>
+              <Link href={`/blog/${blog.slug}`}>
+                <a className="text-blue-400 hover:text-blue-300">
+                  <h2 className="text-lg font-semibold text-purple-400 mb-2">
+                    {blog.title || 'Untitled Post'}
+                  </h2>
+                  <div className="text-gray-300 leading-relaxed text-justify">
+                    {blog.content && blog.content.split('\n').map((line, index) => {
+                      if (line.startsWith('Question:')) {
+                        return (
+                          <p key={index} className="text-base font-semibold text-pink-400">
+                            {line.replace('Question:', '').trim()}
+                          </p>
+                        );
+                      } else if (line.startsWith('Answer')) {
+                        return (
+                          <p key={index} className="text-gray-300 mt-2">
+                            {line.replace(/Answer \d+:/, '').trim()}
+                          </p>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-3">
+                    {blog.date} {blog.time ? `at ${blog.time}` : ''}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {blog.tags && blog.tags.length > 0 ? (
+                      blog.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400">No tags</span>
+                    )}
+                  </div>
+                </a>
               </Link>
               <div className="mt-3 flex justify-between">
-                <Link to={`/blog/${blog.slug}`} className="text-blue-400 hover:underline text-sm">
-                  Read More
+                <Link href={`/blog/${blog.slug}`}>
+                  <a className="text-blue-400 hover:underline text-sm">Read More</a>
                 </Link>
                 <button
                   onClick={() => sharePost(blog)}
@@ -168,7 +170,6 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
                   Share
                 </button>
               </div>
-              {/* Related Posts Section */}
               <div className="mt-4">
                 <h3 className="text-sm font-semibold text-gray-300">Read More Posts:</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -176,10 +177,11 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
                     getRelatedPosts(blog).map((relatedBlog) => (
                       <Link
                         key={relatedBlog.id || relatedBlog.title}
-                        to={`/blog/${relatedBlog.slug}`}
-                        className="text-blue-400 hover:underline text-sm"
+                        href={`/blog/${relatedBlog.slug}`}
                       >
-                        {relatedBlog.title || 'Untitled Post'}
+                        <a className="text-blue-400 hover:underline text-sm">
+                          {relatedBlog.title || 'Untitled Post'}
+                        </a>
                       </Link>
                     ))
                   ) : (
@@ -197,13 +199,10 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
       )}
     </div>
   );
-
-  return renderedOutput;
 }
 
 // Blog Component
-function Blog({ blogs }) {
-  const { slug } = useParams();
+function Blog({ blogs, slug }) {
   const blog = blogs.find((b) => b.slug === slug);
 
   const [comments, setComments] = useState([]);
@@ -242,7 +241,6 @@ function Blog({ blogs }) {
     e.preventDefault();
     if (newComment.trim() && blog?.id) {
       const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
-      
       try {
         const response = await fetch('/api/post', {
           method: 'PUT',
@@ -281,7 +279,7 @@ function Blog({ blogs }) {
     }
   };
 
-  const renderedOutput = (
+  return (
     <div className="max-w-3xl mx-auto p-4">
       {blog ? (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -367,13 +365,12 @@ function Blog({ blogs }) {
       )}
     </div>
   );
-
-  return renderedOutput;
 }
 
 // Main App Component
-function App() {
-  const [blogs, setBlogs] = useState([]);
+export default function App({ initialBlogs, slug }) {
+  const router = useRouter();
+  const [blogs, setBlogs] = useState(initialBlogs || []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -404,38 +401,39 @@ function App() {
   };
 
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    if (!initialBlogs || initialBlogs.length === 0) {
+      fetchBlogs();
+    } else {
+      setLoading(false);
+    }
+  }, [initialBlogs]);
 
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
-    if (showSearch) setSearchQuery(''); // Clear search when closing
+    if (showSearch) setSearchQuery('');
   };
 
-  // Scroll Button Logic
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
-      // Show button only if page is scrollable
       if (documentHeight > windowHeight) {
         setShowScrollButton(true);
       } else {
         setShowScrollButton(false);
       }
 
-      // Determine scroll direction
       if (scrollPosition + windowHeight >= documentHeight - 50) {
-        setScrollDirection('up'); // At bottom, show "up" button
+        setScrollDirection('up');
       } else if (scrollPosition <= 50) {
-        setScrollDirection('down'); // At top, show "down" button
+        setScrollDirection('down');
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -453,18 +451,45 @@ function App() {
     }
   };
 
-  const renderedOutput = (
+  // Determine which component to render based on route
+  let content;
+  const currentPath = router.pathname;
+
+  if (currentPath === '/about') {
+    content = <AboutUs />;
+  } else if (currentPath === '/privacy') {
+    content = <PrivacyPolicy />;
+  } else if (currentPath === '/disclaimer') {
+    content = <Disclaimer />;
+  } else if (currentPath === '/contact') {
+    content = <ContactUs />;
+  } else if (currentPath.startsWith('/blog/') && slug) {
+    content = <Blog blogs={blogs} slug={slug} />;
+  } else {
+    content = (
+      <Home
+        blogs={blogs}
+        fetchBlogs={fetchBlogs}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+    );
+  }
+
+  return (
     <div>
       <div className="min-h-screen bg-gray-900 text-white">
         <div className="sticky top-0 z-10 bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link to="/">
-                <img src="/logo.png" alt="Knowtivus Logo" className="h-12 w-auto" />
+              <Link href="/">
+                <a>
+                  <img src="/logo.png" alt="Knowtivus Logo" className="h-12 w-auto" />
+                </a>
               </Link>
               <div className="flex items-center space-x-4">
-                <Link to="/" className="text-sm hover:text-blue-400">
-                  Home
+                <Link href="/">
+                  <a className="text-sm hover:text-blue-400">Home</a>
                 </Link>
                 <button
                   onClick={handleSearchToggle}
@@ -512,41 +537,29 @@ function App() {
             </button>
           </div>
         ) : (
-          <Routes>
-            <Route
-              path="/"
-              element={<Home blogs={blogs} fetchBlogs={fetchBlogs} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
-            />
-            <Route path="/blog/:slug" element={<Blog blogs={blogs} />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
-            <Route path="/contact" element={<ContactUs />} />
-          </Routes>
+          content
         )}
 
-        {/* Footer */}
         <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm">© 2025 Knowtivus. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/about" className="text-sm hover:text-blue-400">
-                About Us
+              <Link href="/about">
+                <a className="text-sm hover:text-blue-400">About Us</a>
               </Link>
-              <Link to="/privacy" className="text-sm hover:text-blue-400">
-                Privacy Policy
+              <Link href="/privacy">
+                <a className="text-sm hover:text-blue-400">Privacy Policy</a>
               </Link>
-              <Link to="/disclaimer" className="text-sm hover:text-blue-400">
-                Disclaimer
+              <Link href="/disclaimer">
+                <a className="text-sm hover:text-blue-400">Disclaimer</a>
               </Link>
-              <Link to="/contact" className="text-sm hover:text-blue-400">
-                Contact Us
+              <Link href="/contact">
+                <a className="text-sm hover:text-blue-400">Contact Us</a>
               </Link>
             </div>
           </div>
         </footer>
 
-        {/* Scroll Button - Fixed Position */}
         {showScrollButton && (
           <button
             onClick={handleScrollClick}
@@ -559,8 +572,4 @@ function App() {
       </div>
     </div>
   );
-
-  return renderedOutput;
-}
-
-export default App;
+    }
