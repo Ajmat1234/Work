@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import Head from 'next/head';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useParams } from 'react-router-dom';
 
 // About Us Component
 function AboutUs() {
@@ -12,7 +10,7 @@ function AboutUs() {
         Welcome to Knowtivus! <br />
         I'm Ajmat from Jharkhand, India. <br /><br />
         This website is my personal project where I share informational blogs to help students, curious readers, and professionals. I use modern AI tools to assist in creating content, but I personally check and publish each blog to make sure it's helpful and meaningful. <br /><br />
-        I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments — so I can correct it and we can learn together.
+        I believe in sharing knowledge freely. If you ever find any information on this site that seems incorrect, I humbly request you to do your own research and let me know through comments â€” so I can correct it and we can learn together.
       </p>
     </div>
   );
@@ -25,9 +23,9 @@ function PrivacyPolicy() {
       <h1 className="text-2xl font-bold text-purple-400 mb-2">Privacy Policy</h1>
       <p className="text-gray-300 leading-relaxed text-justify">
         At Knowtivus, your privacy is extremely important. <br /><br />
-        This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous — I do not know who visits my site, and no data about you is saved on my end. <br /><br />
+        This is a non-login website, which means I do not collect, store, or share any personal information about visitors. All users are anonymous â€” I do not know who visits my site, and no data about you is saved on my end. <br /><br />
         I do not use any public or private user data. I also do not use cookies or third-party tracking tools. <br /><br />
-        The only interaction is through comments — and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
+        The only interaction is through comments â€” and I read those to learn and improve the blog. You can comment freely; your identity remains unknown to me. <br /><br />
         There is absolutely no risk to your privacy when using this website.
       </p>
     </div>
@@ -43,7 +41,7 @@ function Disclaimer() {
         All the content provided on Knowtivus is for informational and educational purposes only. <br /><br />
         While I try my best to share accurate and useful content, there may be occasional mistakes. I encourage all readers to do their own research before taking any action based on the content provided. <br /><br />
         I am not responsible for any kind of loss or damage caused by the information shared here. Your understanding, feedback, and suggestions are always welcome through the comment section. <br /><br />
-        If you find any errors or misleading details, please let me know in the comments — I will gladly correct them. Learning is a journey, and I believe in growing together.
+        If you find any errors or misleading details, please let me know in the comments â€” I will gladly correct them. Learning is a journey, and I believe in growing together.
       </p>
     </div>
   );
@@ -64,11 +62,8 @@ function ContactUs() {
   );
 }
 
-// Home Component
-function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage, fetchBlogs, loading, error }) {
-  const router = useRouter();
-  const totalPages = Math.ceil(totalBlogs / blogsPerPage);
-
+// Home Component with Search Filtering and Internal Links
+function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery }) {
   const sharePost = (blog) => {
     const shareText = `${blog.title}\n${blog.content}\nCheck out this post on Knowtivus!`;
     const shareUrl = window.location.origin + `/blog/${blog.slug}`;
@@ -95,102 +90,76 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
   const sortedBlogs = [...filteredBlogs].sort((a, b) => {
     const dateTimeA = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
     const dateTimeB = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
-    if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) return 0;
-    if (isNaN(dateTimeA.getTime())) return 1;
-    if (isNaN(dateTimeB.getTime())) return -1;
+    if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) {
+      return 0;
+    } else if (isNaN(dateTimeA.getTime())) {
+      return 1;
+    } else if (isNaN(dateTimeB.getTime())) {
+      return -1;
+    }
     return dateTimeB.getTime() - dateTimeA.getTime();
   });
 
-  // Slice blogs for pagination
-  const paginatedBlogs = sortedBlogs.slice(
-    (currentPage - 1) * blogsPerPage,
-    currentPage * blogsPerPage
-  );
-
+  // Function to get random related posts (excluding the current post)
   const getRelatedPosts = (currentBlog) => {
     const otherBlogs = blogs.filter((blog) => blog.slug !== currentBlog.slug);
-    if (otherBlogs.length <= 3) return otherBlogs;
-    const shuffled = otherBlogs.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    if (otherBlogs.length <= 3) return otherBlogs; // If 3 or fewer other posts, return all
+    const shuffled = otherBlogs.sort(() => 0.5 - Math.random()); // Shuffle array
+    return shuffled.slice(0, 3); // Return up to 3 random posts
   };
 
-  const handlePageChange = (newPage) => {
-    router.push(`/?page=${newPage}`, undefined, { shallow: true });
-  };
-
-  return (
+  const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      <Head>
-        <title>{`Knowtivus - Latest Blogs | Page ${currentPage}`}</title>
-        <meta name="description" content="Explore the latest educational and informational blogs on Knowtivus. Topics include technology, history, science, and more." />
-        <meta name="keywords" content="blogs, education, knowledge, technology, history, science" />
-        <meta name="robots" content="index, follow" />
-      </Head>
-
-      {loading ? (
-        <p className="text-center text-gray-400">Loading blogs...</p>
-      ) : error ? (
-        <div className="text-center">
-          <p className="text-red-400">{error}</p>
-          <button
-            onClick={() => fetchBlogs(currentPage)}
-            className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
-          >
-            Retry
-          </button>
-        </div>
-      ) : paginatedBlogs.length > 0 ? (
+      {sortedBlogs && sortedBlogs.length > 0 ? (
         <div className="space-y-6">
-          {paginatedBlogs.map((blog) => (
+          {sortedBlogs.map((blog) => (
             <div
               key={blog.id || blog.title}
               className="bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
             >
-              <Link href={`/blog/${blog.slug}`} prefetch={true}>
-                <a className="text-blue-400 hover:text-blue-300">
-                  <h2 className="text-lg font-semibold text-purple-400 mb-2">
-                    {blog.title || 'Untitled Post'}
-                  </h2>
-                  <div className="text-gray-300 leading-relaxed text-justify">
-                    {blog.content && blog.content.split('\n').map((line, index) => {
-                      if (line.startsWith('Question:')) {
-                        return (
-                          <p key={index} className="text-base font-semibold text-pink-400">
-                            {line.replace('Question:', '').trim()}
-                          </p>
-                        );
-                      } else if (line.startsWith('Answer')) {
-                        return (
-                          <p key={index} className="text-gray-300 mt-2">
-                            {line.replace(/Answer \d+:/, '').trim()}
-                          </p>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-3">
-                    {blog.date} {blog.time ? `at ${blog.time}` : ''}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {blog.tags && blog.tags.length > 0 ? (
-                      blog.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-gray-400">No tags</span>
-                    )}
-                  </div>
-                </a>
+              <Link to={`/blog/${blog.slug}`} className="text-blue-400 hover:text-blue-300">
+                <h2 className="text-lg font-semibold text-purple-400 mb-2">
+                  {blog.title || 'Untitled Post'}
+                </h2>
+                <div className="text-gray-300 leading-relaxed text-justify">
+                  {blog.content && blog.content.split('\n').map((line, index) => {
+                    if (line.startsWith('Question:')) {
+                      return (
+                        <p key={index} className="text-base font-semibold text-pink-400">
+                          {line.replace('Question:', '').trim()}
+                        </p>
+                      );
+                    } else if (line.startsWith('Answer')) {
+                      return (
+                        <p key={index} className="text-gray-300 mt-2">
+                          {line.replace(/Answer \d+:/, '').trim()}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-3">
+                  {blog.date} {blog.time ? `at ${blog.time}` : ''}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {blog.tags && blog.tags.length > 0 ? (
+                    blog.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400">No tags</span>
+                  )}
+                </div>
               </Link>
               <div className="mt-3 flex justify-between">
-                <Link href={`/blog/${blog.slug}`} prefetch={true}>
-                  <a className="text-blue-400 hover:underline text-sm">Read More</a>
+                <Link to={`/blog/${blog.slug}`} className="text-blue-400 hover:underline text-sm">
+                  Read More
                 </Link>
                 <button
                   onClick={() => sharePost(blog)}
@@ -199,6 +168,7 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
                   Share
                 </button>
               </div>
+              {/* Related Posts Section */}
               <div className="mt-4">
                 <h3 className="text-sm font-semibold text-gray-300">Read More Posts:</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -206,12 +176,10 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
                     getRelatedPosts(blog).map((relatedBlog) => (
                       <Link
                         key={relatedBlog.id || relatedBlog.title}
-                        href={`/blog/${relatedBlog.slug}`}
-                        prefetch={true}
+                        to={`/blog/${relatedBlog.slug}`}
+                        className="text-blue-400 hover:underline text-sm"
                       >
-                        <a className="text-blue-400 hover:underline text-sm">
-                          {relatedBlog.title || 'Untitled Post'}
-                        </a>
+                        {relatedBlog.title || 'Untitled Post'}
                       </Link>
                     ))
                   ) : (
@@ -227,76 +195,39 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
           {searchQuery ? 'No blogs match your search.' : 'No blogs available.'}
         </p>
       )}
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center items-center gap-4">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg text-sm ${
-              currentPage === 1
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-500'
-            }`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-300">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg text-sm ${
-              currentPage === totalPages
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-500'
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
+
+  return renderedOutput;
 }
 
 // Blog Component
-function Blog({ blogs, slug }) {
+function Blog({ blogs }) {
+  const { slug } = useParams();
   const blog = blogs.find((b) => b.slug === slug);
-  const router = useRouter();
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(true);
-  const [errorComments, setErrorComments] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchComments = async () => {
       setLoadingComments(true);
-      setErrorComments(null);
+      setError(null);
       try {
         const response = await fetch(`/api/post?blogId=${blog?.id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
-        if (response.ok) {
-          // Ensure data is an array; if API returns an object, handle it
-          if (Array.isArray(data)) {
-            setComments(data);
-          } else if (data.comments && Array.isArray(data.comments)) {
-            setComments(data.comments);
-          } else {
-            setComments([]);
-            setErrorComments('No comments available.');
-          }
+        if (response.ok && Array.isArray(data)) {
+          setComments(data);
         } else {
-          setErrorComments('Failed to load comments.');
+          setError('Failed to load comments.');
         }
       } catch (error) {
-        setErrorComments('An error occurred while fetching comments.');
+        setError('An error occurred while fetching comments.');
       } finally {
         setLoadingComments(false);
       }
@@ -311,6 +242,7 @@ function Blog({ blogs, slug }) {
     e.preventDefault();
     if (newComment.trim() && blog?.id) {
       const comment = { text: newComment, date: new Date().toISOString().split('T')[0] };
+      
       try {
         const response = await fetch('/api/post', {
           method: 'PUT',
@@ -326,12 +258,9 @@ function Blog({ blogs, slug }) {
             return [...prevComments, comment];
           });
           setNewComment('');
-        } else {
-          alert('Failed to post comment. Please try again.');
         }
       } catch (error) {
         console.error('Error saving comment:', error);
-        alert('An error occurred while posting the comment.');
       }
     }
   };
@@ -352,15 +281,8 @@ function Blog({ blogs, slug }) {
     }
   };
 
-  return (
+  const renderedOutput = (
     <div className="max-w-3xl mx-auto p-4">
-      <Head>
-        <title>{blog ? `${blog.title} | Knowtivus` : 'Blog Not Found | Knowtivus'}</title>
-        <meta name="description" content={blog ? blog.content.slice(0, 150) : 'Blog not found on Knowtivus.'} />
-        <meta name="keywords" content={blog && blog.tags ? blog.tags.join(', ') : 'blog, knowtivus'} />
-        <meta name="robots" content="index, follow" />
-      </Head>
-
       {blog ? (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold text-purple-400 mb-2">
@@ -411,8 +333,8 @@ function Blog({ blogs, slug }) {
             <h3 className="text-lg font-semibold text-white">Comments</h3>
             {loadingComments ? (
               <p className="text-gray-400 mt-2">Loading comments...</p>
-            ) : errorComments ? (
-              <p className="text-red-400 mt-2">{errorComments}</p>
+            ) : error ? (
+              <p className="text-red-400 mt-2">{error}</p>
             ) : comments.length > 0 ? (
               comments.map((comment, index) => (
                 <div key={index} className="mt-3 p-3 bg-gray-700 rounded-lg">
@@ -427,7 +349,7 @@ function Blog({ blogs, slug }) {
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-3 border rounded-lg bg-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full p-3 border rounded-lg text-gray-900 bg-gray-600 text-white"
                 placeholder="Add a comment..."
                 rows="3"
               />
@@ -441,65 +363,38 @@ function Blog({ blogs, slug }) {
           </div>
         </div>
       ) : (
-        <div className="text-center">
-          <p className="text-gray-400">Blog not found!</p>
-          <button
-            onClick={() => router.push('/')}
-            className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
-          >
-            Back to Home
-          </button>
-        </div>
+        <p className="text-center text-gray-400">Blog not found!</p>
       )}
     </div>
   );
+
+  return renderedOutput;
 }
 
 // Main App Component
-export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPage }) {
-  const router = useRouter();
-  const [blogs, setBlogs] = useState(initialBlogs || []);
-  const [totalBlogs, setTotalBlogs] = useState(initialTotalBlogs || 0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+function App() {
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [scrollDirection, setScrollDirection] = useState('down');
 
-  // Get the current page from query parameters
-  useEffect(() => {
-    const pageFromQuery = parseInt(router.query.page, 10) || 1;
-    setCurrentPage(pageFromQuery);
-  }, [router.query.page]);
-
-  const fetchBlogs = async (page = 1) => {
+  const fetchBlogs = async () => {
     setLoading(true);
     setError(null);
-    const limit = blogsPerPage;
-    const offset = (page - 1) * limit;
     try {
-      const response = await fetch(`/api/post?limit=${limit}&offset=${offset}`, {
+      const response = await fetch('/api/post', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
-        setBlogs(data);
+        setBlogs([]); // State reset to ensure fresh data
+        setBlogs(data); // Update with new data
       } else {
         setError('Failed to load blogs. Please try again.');
-      }
-
-      // Fetch total count if not already set
-      if (totalBlogs === 0) {
-        const countResponse = await fetch('/api/post?count=true', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const countData = await countResponse.json();
-        if (countResponse.ok) {
-          setTotalBlogs(countData.count || 0);
-        }
       }
     } catch (error) {
       setError('An error occurred while fetching blogs.');
@@ -508,34 +403,39 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
     }
   };
 
-  // Fetch blogs when the page changes
   useEffect(() => {
-    if (currentPage !== 1 || !initialBlogs || initialBlogs.length === 0) {
-      fetchBlogs(currentPage);
-    }
-  }, [currentPage]);
+    fetchBlogs();
+  }, []);
 
+  const handleSearchToggle = () => {
+    setShowSearch(!showSearch);
+    if (showSearch) setSearchQuery(''); // Clear search when closing
+  };
+
+  // Scroll Button Logic
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
+      // Show button only if page is scrollable
       if (documentHeight > windowHeight) {
         setShowScrollButton(true);
       } else {
         setShowScrollButton(false);
       }
 
+      // Determine scroll direction
       if (scrollPosition + windowHeight >= documentHeight - 50) {
-        setScrollDirection('up');
+        setScrollDirection('up'); // At bottom, show "up" button
       } else if (scrollPosition <= 50) {
-        setScrollDirection('down');
+        setScrollDirection('down'); // At top, show "down" button
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll();
+    handleScroll(); // Initial check
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -553,107 +453,42 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
     }
   };
 
-  // Determine which component to render based on route
-  let content;
-  const currentPath = router.pathname;
-
-  if (currentPath === '/about') {
-    content = (
-      <>
-        <Head>
-          <title>About Us | Knowtivus</title>
-          <meta name="description" content="Learn more about Knowtivus and its mission to share knowledge freely." />
-          <meta name="keywords" content="about us, knowtivus, knowledge sharing" />
-          <meta name="robots" content="index, follow" />
-        </Head>
-        <AboutUs />
-      </>
-    );
-  } else if (currentPath === '/privacy') {
-    content = (
-      <>
-        <Head>
-          <title>Privacy Policy | Knowtivus</title>
-          <meta name="description" content="Read the privacy policy of Knowtivus. Your privacy is our priority." />
-          <meta name="keywords" content="privacy policy, knowtivus, data privacy" />
-          <meta name="robots" content="index, follow" />
-        </Head>
-        <PrivacyPolicy />
-      </>
-    );
-  } else if (currentPath === '/disclaimer') {
-    content = (
-      <>
-        <Head>
-          <title>Disclaimer | Knowtivus</title>
-          <meta name="description" content="Read the disclaimer for the content provided on Knowtivus." />
-          <meta name="keywords" content="disclaimer, knowtivus, educational content" />
-          <meta name="robots" content="index, follow" />
-        </Head>
-        <Disclaimer />
-      </>
-    );
-  } else if (currentPath === '/contact') {
-    content = (
-      <>
-        <Head>
-          <title>Contact Us | Knowtivus</title>
-          <meta name="description" content="Get in touch with Knowtivus for feedback and suggestions." />
-          <meta name="keywords" content="contact us, knowtivus, feedback" />
-          <meta name="robots" content="index, follow" />
-        </Head>
-        <ContactUs />
-      </>
-    );
-  } else if (currentPath.startsWith('/blog/') && slug) {
-    content = <Blog blogs={blogs} slug={slug} />;
-  } else {
-    content = (
-      <Home
-        blogs={blogs}
-        setBlogs={setBlogs}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        currentPage={currentPage}
-        totalBlogs={totalBlogs}
-        blogsPerPage={blogsPerPage}
-        fetchBlogs={fetchBlogs}
-        loading={loading}
-        error={error}
-      />
-    );
-  }
-
-  return (
+  const renderedOutput = (
     <div>
       <div className="min-h-screen bg-gray-900 text-white">
         <div className="sticky top-0 z-10 bg-gray-800 shadow-lg p-4">
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Link href="/">
-                <a>
-                  <img src="/logo.png" alt="Knowtivus Logo" className="h-12 w-auto" />
-                </a>
+              <Link to="/">
+                <img src="/logo.png" alt="Knowtivus Logo" className="h-12 w-auto" />
               </Link>
               <div className="flex items-center space-x-4">
-                <Link href="/">
-                  <a className="text-sm hover:text-blue-400">Home</a>
+                <Link to="/" className="text-sm hover:text-blue-400">
+                  Home
                 </Link>
+                <button
+                  onClick={handleSearchToggle}
+                  className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 transition-all"
+                >
+                  ðŸ”
+                </button>
               </div>
             </div>
-            <div className="mt-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search blogs..."
-                className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
+            {showSearch && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search blogs..."
+                  className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <h1 className="text-xl font-bold text-white">Latest Blogs</h1>
               <button
-                onClick={() => fetchBlogs(currentPage)}
+                onClick={fetchBlogs}
                 className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-xs"
               >
                 Refresh Blogs
@@ -662,38 +497,70 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
           </div>
         </div>
 
-        {content}
+        {loading ? (
+          <div className="text-center mt-8">
+            <p className="text-gray-400">Loading blogs...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center mt-8">
+            <p className="text-red-400">{error}</p>
+            <button
+              onClick={fetchBlogs}
+              className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <Routes>
+            <Route
+              path="/"
+              element={<Home blogs={blogs} fetchBlogs={fetchBlogs} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
+            />
+            <Route path="/blog/:slug" element={<Blog blogs={blogs} />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/contact" element={<ContactUs />} />
+          </Routes>
+        )}
 
+        {/* Footer */}
         <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm">© 2025 Knowtivus. All rights reserved.</p>
+            <p className="text-sm">Â© 2025 Knowtivus. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
-              <Link href="/about">
-                <a className="text-sm hover:text-blue-400">About Us</a>
+              <Link to="/about" className="text-sm hover:text-blue-400">
+                About Us
               </Link>
-              <Link href="/privacy">
-                <a className="text-sm hover:text-blue-400">Privacy Policy</a>
+              <Link to="/privacy" className="text-sm hover:text-blue-400">
+                Privacy Policy
               </Link>
-              <Link href="/disclaimer">
-                <a className="text-sm hover:text-blue-400">Disclaimer</a>
+              <Link to="/disclaimer" className="text-sm hover:text-blue-400">
+                Disclaimer
               </Link>
-              <Link href="/contact">
-                <a className="text-sm hover:text-blue-400">Contact Us</a>
+              <Link to="/contact" className="text-sm hover:text-blue-400">
+                Contact Us
               </Link>
             </div>
           </div>
         </footer>
 
+        {/* Scroll Button - Fixed Position */}
         {showScrollButton && (
           <button
             onClick={handleScrollClick}
             className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white shadow-lg transition-all"
             title={scrollDirection === 'down' ? 'Scroll to Bottom' : 'Scroll to Top'}
           >
-            {scrollDirection === 'down' ? '⇓' : '⇑'}
+            {scrollDirection === 'down' ? 'â‡“' : 'â‡‘'}
           </button>
         )}
       </div>
     </div>
   );
-    }
+
+  return renderedOutput;
+}
+
+export default App;
