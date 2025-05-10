@@ -24,26 +24,23 @@ export default async function handler(req, res) {
         res.status(response.status).json(data);
       }
     } else if (req.method === 'GET') {
-      const { blogId, slug } = req.query;
+      const { blogId, slug, limit = 100, offset = 0, count } = req.query;
       let url;
       if (slug) {
-        url = 'https://auto-generated.onrender.com/api/post';
+        url = `https://auto-generated.onrender.com/api/post?slug=${slug}`;
       } else if (blogId) {
         url = `https://auto-generated.onrender.com/api/post?blogId=${blogId}`;
+      } else if (count === 'true') {
+        url = `https://auto-generated.onrender.com/api/post?count=true`;
       } else {
-        url = 'https://auto-generated.onrender.com/api/post';
+        url = `https://auto-generated.onrender.com/api/post?limit=${limit}&offset=${offset}`;
       }
 
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
-      let data = await response.json();
-
-      if (response.ok && slug) {
-        // Filter by slug if provided
-        data = Array.isArray(data) ? data.find(blog => blog.slug === slug) || [] : [];
-      }
+      const data = await response.json();
 
       if (response.ok) {
         res.status(200).json(data);
@@ -72,4 +69,4 @@ export default async function handler(req, res) {
     console.error('API Error:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
-}
+    }
