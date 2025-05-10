@@ -17,23 +17,22 @@ const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
   }
 };
 
-export async function getStaticProps({ params }) {
-  const page = params?.page ? parseInt(params.page, 10) : 1; // Default to page 1 for root route
+export async function getStaticProps() {
   const limit = 100;
-  const offset = (page - 1) * limit;
+  const offset = 0; // Always fetch the first page for the root route
 
   try {
-    // Directly fetch from Render.com backend to avoid circular dependency
+    // Directly fetch from Render.com backend
     const blogsUrl = `https://auto-generated.onrender.com/api/post?limit=${limit}&offset=${offset}`;
     const countUrl = 'https://auto-generated.onrender.com/api/post?count=true';
 
-    console.log(`Fetching blogs for page ${page}...`);
+    console.log('Fetching blogs for the first page...');
     const blogs = await fetchWithRetry(blogsUrl, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    console.log(`Fetching total blogs count...`);
+    console.log('Fetching total blogs count...');
     const countData = await fetchWithRetry(countUrl, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -44,20 +43,17 @@ export async function getStaticProps({ params }) {
     return {
       props: {
         initialBlogs: blogs || [],
-        currentPage: page,
-        totalBlogs: count,
+        initialTotalBlogs: count || 0,
         blogsPerPage: limit,
       },
       revalidate: 60, // Revalidate every 60 seconds (ISR)
     };
   } catch (error) {
     console.error('Error in getStaticProps:', error.message);
-    // Fallback to empty data to ensure build doesn't fail
     return {
       props: {
         initialBlogs: [],
-        currentPage: page,
-        totalBlogs: 0,
+        initialTotalBlogs: 0,
         blogsPerPage: limit,
       },
       revalidate: 60,
@@ -65,20 +61,11 @@ export async function getStaticProps({ params }) {
   }
 }
 
-export async function getStaticPaths() {
-  // Pre-render only the first page (/)
-  return {
-    paths: [{ params: { page: '1' } }],
-    fallback: 'blocking', // Other pages will be generated on-demand
-  };
-}
-
-export default function HomePage({ initialBlogs, currentPage, totalBlogs, blogsPerPage }) {
+export default function HomePage({ initialBlogs, initialTotalBlogs, blogsPerPage }) {
   return (
     <App
       initialBlogs={initialBlogs}
-      currentPage={currentPage}
-      totalBlogs={totalBlogs}
+      initialTotalBlogs={initialTotalBlogs}
       blogsPerPage={blogsPerPage}
     />
   );
