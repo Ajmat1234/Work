@@ -2,18 +2,19 @@
   "name": "blog-frontend",
   "version": "1.0.0",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "jest" // Optional: Agar aap testing ke liye Jest use karna chahte hain
   },
   "dependencies": {
+    "next": "^14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
-    "axios": "^1.7.2",
-    "react-scripts": "^5.0.1",
-    "redis": "^4.6.13"
+    "axios": "^1.7.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0" // Optional: Testing ke liye
   },
   "browserslist": {
     "production": [
