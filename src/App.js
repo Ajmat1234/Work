@@ -65,7 +65,7 @@ function ContactUs() {
 }
 
 // Home Component
-function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage }) {
+function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage, fetchBlogs }) {
   const router = useRouter();
   const totalPages = Math.ceil(totalBlogs / blogsPerPage);
 
@@ -113,7 +113,7 @@ function Home({ blogs, fetchBlogs, searchQuery, setSearchQuery, currentPage, tot
   };
 
   const handlePageChange = (newPage) => {
-    router.push(`/?page=${newPage}`);
+    router.push(`/?page=${newPage}`, undefined, { shallow: true });
   };
 
   return (
@@ -415,15 +415,23 @@ function Blog({ blogs, slug }) {
 }
 
 // Main App Component
-export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 0, blogsPerPage = 100 }) {
+export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPage }) {
   const router = useRouter();
   const [blogs, setBlogs] = useState(initialBlogs || []);
-  const [loading, setLoading] = useState(true);
+  const [totalBlogs, setTotalBlogs] = useState(initialTotalBlogs || 0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [scrollDirection, setScrollDirection] = useState('down');
+
+  // Get the current page from query parameters
+  useEffect(() => {
+    const pageFromQuery = parseInt(router.query.page, 10) || 1;
+    setCurrentPage(pageFromQuery);
+  }, [router.query.page]);
 
   const fetchBlogs = async (page = 1) => {
     setLoading(true);
@@ -441,6 +449,18 @@ export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 
       } else {
         setError('Failed to load blogs. Please try again.');
       }
+
+      // Fetch total count if not already set
+      if (totalBlogs === 0) {
+        const countResponse = await fetch('/api/post?count=true', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const countData = await countResponse.json();
+        if (countResponse.ok) {
+          setTotalBlogs(countData.count || 0);
+        }
+      }
     } catch (error) {
       setError('An error occurred while fetching blogs.');
     } finally {
@@ -448,13 +468,12 @@ export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 
     }
   };
 
+  // Fetch blogs when the page changes
   useEffect(() => {
-    if (!initialBlogs || initialBlogs.length === 0) {
+    if (currentPage !== 1 || !initialBlogs || initialBlogs.length === 0) {
       fetchBlogs(currentPage);
-    } else {
-      setLoading(false);
     }
-  }, [initialBlogs, currentPage]);
+  }, [currentPage]);
 
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
@@ -557,12 +576,13 @@ export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 
     content = (
       <Home
         blogs={blogs}
-        fetchBlogs={fetchBlogs}
+        setBlogs={setBlogs}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         currentPage={currentPage}
         totalBlogs={totalBlogs}
         blogsPerPage={blogsPerPage}
+        fetchBlogs={fetchBlogs}
       />
     );
   }
@@ -654,7 +674,7 @@ export default function App({ initialBlogs, slug, currentPage = 1, totalBlogs = 
         {showScrollButton && (
           <button
             onClick={handleScrollClick}
-            className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-500 hover:bg-gray-400 text-white shadow-lg transition-all"
+            className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white shadow-lg transition-all"
             title={scrollDirection === 'down' ? 'Scroll to Bottom' : 'Scroll to Top'}
           >
             {scrollDirection === 'down' ? '⇓' : '⇑'}
