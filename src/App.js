@@ -65,7 +65,7 @@ function ContactUs() {
 }
 
 // Home Component
-function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage, fetchBlogs }) {
+function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, totalBlogs, blogsPerPage, fetchBlogs, loading, error }) {
   const router = useRouter();
   const totalPages = Math.ceil(totalBlogs / blogsPerPage);
 
@@ -95,15 +95,17 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
   const sortedBlogs = [...filteredBlogs].sort((a, b) => {
     const dateTimeA = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
     const dateTimeB = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
-    if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) {
-      return 0;
-    } else if (isNaN(dateTimeA.getTime())) {
-      return 1;
-    } else if (isNaN(dateTimeB.getTime())) {
-      return -1;
-    }
+    if (isNaN(dateTimeA.getTime()) && isNaN(dateTimeB.getTime())) return 0;
+    if (isNaN(dateTimeA.getTime())) return 1;
+    if (isNaN(dateTimeB.getTime())) return -1;
     return dateTimeB.getTime() - dateTimeA.getTime();
   });
+
+  // Slice blogs for pagination
+  const paginatedBlogs = sortedBlogs.slice(
+    (currentPage - 1) * blogsPerPage,
+    currentPage * blogsPerPage
+  );
 
   const getRelatedPosts = (currentBlog) => {
     const otherBlogs = blogs.filter((blog) => blog.slug !== currentBlog.slug);
@@ -125,9 +127,21 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
         <meta name="robots" content="index, follow" />
       </Head>
 
-      {sortedBlogs && sortedBlogs.length > 0 ? (
+      {loading ? (
+        <p className="text-center text-gray-400">Loading blogs...</p>
+      ) : error ? (
+        <div className="text-center">
+          <p className="text-red-400">{error}</p>
+          <button
+            onClick={() => fetchBlogs(currentPage)}
+            className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      ) : paginatedBlogs.length > 0 ? (
         <div className="space-y-6">
-          {sortedBlogs.map((blog) => (
+          {paginatedBlogs.map((blog) => (
             <div
               key={blog.id || blog.title}
               className="bg-gray-800 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
@@ -251,29 +265,38 @@ function Home({ blogs, setBlogs, searchQuery, setSearchQuery, currentPage, total
 // Blog Component
 function Blog({ blogs, slug }) {
   const blog = blogs.find((b) => b.slug === slug);
+  const router = useRouter();
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(true);
-  const [error, setError] = useState(null);
+  const [errorComments, setErrorComments] = useState(null);
 
   useEffect(() => {
     const fetchComments = async () => {
       setLoadingComments(true);
-      setError(null);
+      setErrorComments(null);
       try {
         const response = await fetch(`/api/post?blogId=${blog?.id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
-        if (response.ok && Array.isArray(data)) {
-          setComments(data);
+        if (response.ok) {
+          // Ensure data is an array; if API returns an object, handle it
+          if (Array.isArray(data)) {
+            setComments(data);
+          } else if (data.comments && Array.isArray(data.comments)) {
+            setComments(data.comments);
+          } else {
+            setComments([]);
+            setErrorComments('No comments available.');
+          }
         } else {
-          setError('Failed to load comments.');
+          setErrorComments('Failed to load comments.');
         }
       } catch (error) {
-        setError('An error occurred while fetching comments.');
+        setErrorComments('An error occurred while fetching comments.');
       } finally {
         setLoadingComments(false);
       }
@@ -303,9 +326,12 @@ function Blog({ blogs, slug }) {
             return [...prevComments, comment];
           });
           setNewComment('');
+        } else {
+          alert('Failed to post comment. Please try again.');
         }
       } catch (error) {
         console.error('Error saving comment:', error);
+        alert('An error occurred while posting the comment.');
       }
     }
   };
@@ -328,6 +354,13 @@ function Blog({ blogs, slug }) {
 
   return (
     <div className="max-w-3xl mx-auto p-4">
+      <Head>
+        <title>{blog ? `${blog.title} | Knowtivus` : 'Blog Not Found | Knowtivus'}</title>
+        <meta name="description" content={blog ? blog.content.slice(0, 150) : 'Blog not found on Knowtivus.'} />
+        <meta name="keywords" content={blog && blog.tags ? blog.tags.join(', ') : 'blog, knowtivus'} />
+        <meta name="robots" content="index, follow" />
+      </Head>
+
       {blog ? (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold text-purple-400 mb-2">
@@ -378,8 +411,8 @@ function Blog({ blogs, slug }) {
             <h3 className="text-lg font-semibold text-white">Comments</h3>
             {loadingComments ? (
               <p className="text-gray-400 mt-2">Loading comments...</p>
-            ) : error ? (
-              <p className="text-red-400 mt-2">{error}</p>
+            ) : errorComments ? (
+              <p className="text-red-400 mt-2">{errorComments}</p>
             ) : comments.length > 0 ? (
               comments.map((comment, index) => (
                 <div key={index} className="mt-3 p-3 bg-gray-700 rounded-lg">
@@ -394,7 +427,7 @@ function Blog({ blogs, slug }) {
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 bg-gray-600 text-white"
+                className="w-full p-3 border rounded-lg bg-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Add a comment..."
                 rows="3"
               />
@@ -408,7 +441,15 @@ function Blog({ blogs, slug }) {
           </div>
         </div>
       ) : (
-        <p className="text-center text-gray-400">Blog not found!</p>
+        <div className="text-center">
+          <p className="text-gray-400">Blog not found!</p>
+          <button
+            onClick={() => router.push('/')}
+            className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+          >
+            Back to Home
+          </button>
+        </div>
       )}
     </div>
   );
@@ -423,7 +464,6 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [scrollDirection, setScrollDirection] = useState('down');
 
@@ -474,11 +514,6 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
       fetchBlogs(currentPage);
     }
   }, [currentPage]);
-
-  const handleSearchToggle = () => {
-    setShowSearch(!showSearch);
-    if (showSearch) setSearchQuery('');
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -583,6 +618,8 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
         totalBlogs={totalBlogs}
         blogsPerPage={blogsPerPage}
         fetchBlogs={fetchBlogs}
+        loading={loading}
+        error={error}
       />
     );
   }
@@ -602,25 +639,17 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
                 <Link href="/">
                   <a className="text-sm hover:text-blue-400">Home</a>
                 </Link>
-                <button
-                  onClick={handleSearchToggle}
-                  className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 transition-all"
-                >
-                  🔍
-                </button>
               </div>
             </div>
-            {showSearch && (
-              <div className="mt-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search blogs..."
-                  className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            )}
+            <div className="mt-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search blogs..."
+                className="w-full p-2 border rounded-lg text-gray-900 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
             <div className="flex justify-between items-center">
               <h1 className="text-xl font-bold text-white">Latest Blogs</h1>
               <button
@@ -633,23 +662,7 @@ export default function App({ initialBlogs, slug, initialTotalBlogs, blogsPerPag
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center mt-8">
-            <p className="text-gray-400">Loading blogs...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center mt-8">
-            <p className="text-red-400">{error}</p>
-            <button
-              onClick={() => fetchBlogs(currentPage)}
-              className="mt-4 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          content
-        )}
+        {content}
 
         <footer className="bg-gray-800 text-gray-300 p-4 mt-8">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
